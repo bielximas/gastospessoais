@@ -16,7 +16,7 @@
 
     .statusbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 10px; color:#fff; font-size: 12px; }
     .pill { display:inline-block; font-size: 12px; padding: 6px 10px; border-radius: 999px; background:#eef2ff; color:#273c75; font-weight: 900; }
-    .statusbar a { color:#fff; text-decoration: underline; cursor:pointer; }
+    .statusbar a { color:#fff; text-decoration: underline; cursor:pointer; margin-left: 10px; }
 
     .tabs { display: flex; background: rgba(255,255,255,0.95); border-radius: 15px; margin-bottom: 16px; overflow: hidden; }
     .tab { flex: 1; padding: 14px; background: none; border: none; font-size: 15px; cursor: pointer; transition: all 0.2s; }
@@ -74,7 +74,7 @@
 
     canvas { display: block; margin: 16px auto 6px; border-radius: 20px; }
 
-    /* Detalhe por categoria (pedido) */
+    /* Detalhe por categoria */
     .cat-details {
       margin-top: 14px;
       background: #fff;
@@ -143,7 +143,10 @@
   <div class="container">
     <div class="statusbar">
       <div><span class="pill" id="syncStatus">Sincronização: desconectada</span></div>
-      <div><a id="btnLogout" style="display:none;">Sair</a></div>
+      <div>
+        <a id="btnChangePin" style="display:none;">Trocar PIN</a>
+        <a id="btnLogout" style="display:none;">Sair</a>
+      </div>
     </div>
 
     <h1>Gastos</h1>
@@ -239,7 +242,6 @@
 
       <canvas id="graficoCategorias" width="320" height="320" style="display:none;"></canvas>
 
-      <!-- Aqui entra o detalhamento por categoria -->
       <div id="detalheCategorias" class="cat-details" style="display:none;"></div>
 
       <div class="export-btns" id="exportBtns" style="display:none;">
@@ -304,13 +306,13 @@
         <button id="btnDesbloquear">Desbloquear</button>
       </div>
 
+      <!-- Trocar PIN removido do overlay por segurança -->
       <div class="top-actions" style="margin-top:12px;">
-        <button class="secondary" id="btnTrocarPin">Trocar PIN</button>
         <button class="danger" id="btnLimparPin">Esqueci o PIN</button>
       </div>
 
       <div class="note" id="pinMsg" style="color:#c0392b; font-weight:900;"></div>
-      <div class="note">O PIN é só para este aparelho. Seus dados ficam na nuvem pela conta.</div>
+      <div class="note">O PIN é só para este aparelho. Para resetar, você precisa confirmar sua conta Google.</div>
     </div>
   </div>
 
@@ -325,6 +327,8 @@
       signInWithRedirect,
       getRedirectResult,
       GoogleAuthProvider,
+      reauthenticateWithPopup,
+      reauthenticateWithRedirect,
       signOut
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import {
@@ -338,7 +342,7 @@
       orderBy
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // ====== Firebase config (o seu) ======
+    // Firebase config (o seu)
     const firebaseConfig = {
       apiKey: "AIzaSyAIKbBCn96YbinrRHkDcpvZ4OY7j9Z_ES8",
       authDomain: "gastos-pessoais-a716a.firebaseapp.com",
@@ -352,7 +356,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // ====== Estado ======
     let gastos = [];
     let userUid = null;
     let unsub = null;
@@ -360,19 +363,20 @@
 
     const PALETA = ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#2ecc71','#e74c3c','#3498db','#9b59b6'];
     const PIN_HASH_KEY = 'pinHash_v1';
+    const PENDING_PIN_RESET = 'pendingPinReset_v1';
 
-    // ====== Elementos ======
     const syncStatus = document.getElementById('syncStatus');
     const btnLogout = document.getElementById('btnLogout');
+    const btnChangePin = document.getElementById('btnChangePin');
     const authMsg = document.getElementById('authMsg');
 
     function setStatus(t) { syncStatus.textContent = t; }
     function showOverlay(id, show) { document.getElementById(id).classList.toggle('show', !!show); }
 
-    // ====== Data default ======
+    // Data default
     document.getElementById('data').value = new Date().toISOString().split('T')[0];
 
-    // ====== Tabs ======
+    // Tabs
     window.showTab = function(nome, ev) {
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -382,7 +386,7 @@
       if (nome === 'relatorio') gerarRelatorio();
     };
 
-    // ====== Helpers ======
+    // Helpers
     function somaGastos(arr) { return arr.reduce((t,g) => t + (Number(g.valor) || 0), 0); }
     function formatarAnoMes(dataStr) { return (dataStr && dataStr.length >= 7) ? dataStr.slice(0,7) : ''; }
     function formatarMes(anoMes) {
@@ -403,7 +407,7 @@
         .replaceAll("'","&#039;");
     }
 
-    // ====== PIN (SHA-256) ======
+    // PIN (SHA-256)
     async function sha256Hex(str) {
       const enc = new TextEncoder().encode(str);
       const buf = await crypto.subtle.digest('SHA-256', enc);
@@ -427,6 +431,7 @@
         showOverlay('loginOverlay', false);
         showOverlay('pinOverlay', false);
         btnLogout.style.display = 'inline';
+        btnChangePin.style.display = 'inline';
         setStatus('Sincronização: ativa');
         atualizarTudo();
       }
@@ -457,15 +462,34 @@
       await unlockIfReady();
     });
 
-    document.getElementById('btnTrocarPin').addEventListener('click', () => pinUiMode('set'));
-    document.getElementById('btnLimparPin').addEventListener('click', () => {
-      if (!confirm('Isso vai remover o PIN deste aparelho. Continuar?')) return;
-      localStorage.removeItem(PIN_HASH_KEY);
-      appUnlocked = false;
-      pinUiMode('set');
+    // Trocar PIN agora é só dentro do app (depois de destravar)
+    btnChangePin.addEventListener('click', async () => {
+      const hash = localStorage.getItem(PIN_HASH_KEY);
+      if (!hash) { alert('Nenhum PIN definido ainda.'); await requirePinUnlock(); return; }
+
+      const atual = prompt('Digite o PIN atual para permitir a troca:');
+      if (atual === null) return;
+      const atualTrim = String(atual).trim();
+      if (!/^\d{4,8}$/.test(atualTrim)) { alert('PIN inválido.'); return; }
+
+      const h2 = await sha256Hex(atualTrim);
+      if (h2 !== hash) { alert('PIN atual incorreto.'); return; }
+
+      const novo = prompt('Digite o novo PIN (4 a 8 dígitos):');
+      if (novo === null) return;
+      const novoTrim = String(novo).trim();
+      if (!/^\d{4,8}$/.test(novoTrim)) { alert('Novo PIN inválido.'); return; }
+
+      const novo2 = prompt('Repita o novo PIN:');
+      if (novo2 === null) return;
+      const novo2Trim = String(novo2).trim();
+      if (novoTrim !== novo2Trim) { alert('Os PINs não conferem.'); return; }
+
+      localStorage.setItem(PIN_HASH_KEY, await sha256Hex(novoTrim));
+      alert('PIN alterado com sucesso neste aparelho.');
     });
 
-    // ====== Login UI ======
+    // Login UI
     document.getElementById('btnMostrarEmail').addEventListener('click', () => {
       const box = document.getElementById('emailBox');
       box.style.display = (box.style.display === 'none') ? 'block' : 'none';
@@ -497,7 +521,6 @@
       try {
         await signInWithPopup(auth, provider);
       } catch (e) {
-        // Em alguns mobiles/embeds o popup pode bloquear; aí usamos redirect (mais estável em mobile). 
         try { await signInWithRedirect(auth, provider); }
         catch (e2) { showAuthError(e2); }
       }
@@ -509,11 +532,42 @@
       if (unsub) { unsub(); unsub = null; }
       await signOut(auth);
       btnLogout.style.display = 'none';
+      btnChangePin.style.display = 'none';
       setStatus('Sincronização: desconectada');
       showOverlay('loginOverlay', true);
     });
 
-    // ====== Firestore sync ======
+    // Esqueci o PIN (com reautenticação Google)
+    document.getElementById('btnLimparPin').addEventListener('click', async () => {
+      const msg = document.getElementById('pinMsg');
+      msg.textContent = '';
+
+      if (!confirm('Para resetar o PIN, confirme sua conta Google. Continuar?')) return;
+
+      try {
+        const user = auth.currentUser;
+        if (!user) { msg.textContent = 'Você não está logado.'; return; }
+
+        const provider = new GoogleAuthProvider();
+
+        try {
+          await reauthenticateWithPopup(user, provider);
+          localStorage.removeItem(PIN_HASH_KEY);
+          appUnlocked = false;
+          pinUiMode('set');
+          msg.textContent = 'PIN removido. Crie um novo PIN.';
+        } catch (_) {
+          // se popup bloquear, faz redirect e continua após o retorno
+          sessionStorage.setItem(PENDING_PIN_RESET, '1');
+          await reauthenticateWithRedirect(user, provider);
+        }
+      } catch (e) {
+        console.error(e);
+        msg.textContent = 'Não foi possível confirmar sua conta Google.';
+      }
+    });
+
+    // Firestore sync
     function expensesColRef() {
       return collection(db, `users/${userUid}/expenses`);
     }
@@ -534,11 +588,27 @@
     }
 
     async function initAuthFlow() {
+      // Consome resultados de redirects (login/reauth)
       try { await getRedirectResult(auth); } catch (_) {}
+
+      // Se voltamos de um redirect de reauth para reset de PIN
+      if (sessionStorage.getItem(PENDING_PIN_RESET) === '1' && auth.currentUser) {
+        sessionStorage.removeItem(PENDING_PIN_RESET);
+        localStorage.removeItem(PIN_HASH_KEY);
+        appUnlocked = false;
+        showOverlay('loginOverlay', false);
+        showOverlay('pinOverlay', true);
+        pinUiMode('set');
+        setStatus('Sincronização: ativa');
+      }
+
       onAuthStateChanged(auth, async (user) => {
         if (!user) {
           userUid = null;
           if (unsub) { unsub(); unsub = null; }
+          appUnlocked = false;
+          btnLogout.style.display = 'none';
+          btnChangePin.style.display = 'none';
           setStatus('Sincronização: desconectada');
           showOverlay('loginOverlay', true);
           return;
@@ -554,7 +624,7 @@
       });
     }
 
-    // ====== CRUD ======
+    // CRUD
     window.salvarGasto = async function() {
       if (!userUid) { alert('Faça login para salvar.'); return; }
       if (!appUnlocked) { alert('Desbloqueie com PIN.'); return; }
@@ -593,7 +663,7 @@
       await deleteDoc(doc(db, `users/${userUid}/expenses/${id}`));
     };
 
-    // ====== Lista ======
+    // Lista
     function atualizarLista() {
       const listaEl = document.getElementById('listaGastos');
       const emptyEl = document.getElementById('emptyLista');
@@ -656,7 +726,7 @@
       gerarRelatorio();
     }
 
-    // ====== Relatório (com itens por categoria) ======
+    // Relatório
     function desenharPizza(porCatOrdenado) {
       const canvas = document.getElementById('graficoCategorias');
       const ctx = canvas.getContext('2d');
@@ -687,7 +757,6 @@
         ang += fatia;
       });
 
-      // percentuais nas fatias maiores
       ang = -Math.PI / 2;
       ctx.fillStyle = '#111';
       ctx.font = '900 12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
@@ -709,152 +778,4 @@
     }
 
     function montarDetalheCategorias(gastosMes, totalMes) {
-      const box = document.getElementById('detalheCategorias');
-
-      const map = {};
-      gastosMes.forEach(g => {
-        const cat = g.categoria || 'Outros';
-        const v = Number(g.valor) || 0;
-        if (!map[cat]) map[cat] = { cat, total: 0, itens: [], qtd: 0, min: v, max: v };
-        map[cat].total += v;
-        map[cat].qtd += 1;
-        map[cat].min = Math.min(map[cat].min, v);
-        map[cat].max = Math.max(map[cat].max, v);
-        map[cat].itens.push({
-          data: g.data || '',
-          desc: (g.descricao && String(g.descricao).trim()) ? String(g.descricao).trim() : '(sem descrição)',
-          forma: g.forma || '',
-          valor: v
-        });
-      });
-
-      const porCatOrdenado = Object.values(map).sort((a,b) => b.total - a.total);
-
-      // Itens: por data (mais recente primeiro) e depois por valor
-      porCatOrdenado.forEach(c => {
-        c.itens.sort((a,b) => String(b.data).localeCompare(String(a.data)) || (b.valor - a.valor));
-      });
-
-      desenharPizza(porCatOrdenado);
-
-      box.innerHTML = porCatOrdenado.map((c) => {
-        const pct = totalMes > 0 ? (c.total / totalMes) * 100 : 0;
-        const media = c.qtd ? (c.total / c.qtd) : 0;
-
-        const itensHtml = c.itens.map(it => `
-          <div class="cat-item">
-            <div class="left">
-              <div class="desc">${escapeHtml(it.desc)}</div>
-              <div class="sub">${escapeHtml(formatarData(it.data))}${it.forma ? ' • ' + escapeHtml(it.forma) : ''}</div>
-            </div>
-            <div class="val">${formatarMoeda(it.valor)}</div>
-          </div>
-        `).join('');
-
-        return `
-          <details>
-            <summary>
-              <div>
-                <div class="cat-name">${escapeHtml(c.cat)}</div>
-                <div class="cat-meta">Qtd: ${c.qtd} • Média: ${formatarMoeda(media)} • Menor: ${formatarMoeda(c.min)} • Maior: ${formatarMoeda(c.max)}</div>
-              </div>
-              <div class="cat-right">
-                <div class="cat-total">${formatarMoeda(c.total)}</div>
-                <div class="cat-pct">${pct.toFixed(1)}%</div>
-              </div>
-            </summary>
-            <div class="cat-items">
-              ${itensHtml}
-            </div>
-          </details>
-        `;
-      }).join('');
-
-      box.style.display = porCatOrdenado.length ? 'block' : 'none';
-    }
-
-    function gerarRelatorio() {
-      const mesSelecionado = document.getElementById('relatorioMes').value;
-
-      const canvas = document.getElementById('graficoCategorias');
-      const summary = document.getElementById('summaryRelatorio');
-      const exportBtns = document.getElementById('exportBtns');
-      const empty = document.getElementById('emptyRelatorio');
-      const detalhe = document.getElementById('detalheCategorias');
-      const info = document.getElementById('infoRelatorio');
-
-      if (!mesSelecionado) {
-        canvas.style.display = 'none';
-        summary.style.display = 'none';
-        exportBtns.style.display = 'none';
-        detalhe.style.display = 'none';
-        info.style.display = 'none';
-        empty.style.display = 'block';
-        return;
-      }
-
-      const gastosMes = gastos.filter(g => g.anoMes === mesSelecionado);
-      const totalMes = somaGastos(gastosMes);
-
-      document.getElementById('totalRelatorio').textContent = formatarMoeda(totalMes);
-      summary.style.display = 'block';
-      empty.style.display = 'none';
-
-      if (totalMes > 0) {
-        exportBtns.style.display = 'flex';
-        montarDetalheCategorias(gastosMes, totalMes);
-        info.textContent = `Mês: ${formatarMes(mesSelecionado)} • Lançamentos: ${gastosMes.length}`;
-        info.style.display = 'block';
-      } else {
-        canvas.style.display = 'none';
-        exportBtns.style.display = 'none';
-        detalhe.style.display = 'none';
-        info.style.display = 'none';
-      }
-    }
-
-    window.gerarRelatorio = gerarRelatorio;
-
-    // ====== Export CSV + PDF ======
-    window.exportarCSV = function() {
-      const mes = document.getElementById('relatorioMes').value;
-      if (!mes) { alert('Selecione um mês.'); return; }
-
-      const gastosMes = gastos
-        .filter(g => g.anoMes === mes)
-        .sort((a,b) => String(a.data).localeCompare(String(b.data)));
-
-      const SEP = ';';
-      const EOL = '\r\n';
-      const BOM = '\ufeff';
-
-      const esc = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`;
-      const num = (n) => String(Number(n || 0).toFixed(2)).replace('.', ',');
-
-      const total = somaGastos(gastosMes);
-
-      let csv = BOM + `sep=${SEP}` + EOL;
-      csv += `Relatório${SEP}${esc(formatarMes(mes))}${EOL}${EOL}`;
-      csv += `Data${SEP}Categoria${SEP}Descrição${SEP}Forma${SEP}Valor${EOL}`;
-
-      gastosMes.forEach(g => {
-        csv += `${esc(formatarData(g.data))}${SEP}${esc(g.categoria)}${SEP}${esc(g.descricao)}${SEP}${esc(g.forma)}${SEP}${num(g.valor)}${EOL}`;
-      });
-
-      csv += `${EOL}Total do mês${SEP}${SEP}${SEP}${SEP}${num(total)}${EOL}`;
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `Relatorio_${mes}.csv`;
-      a.click();
-    };
-
-    window.imprimirRelatorio = () => window.print();
-
-    // ====== Start ======
-    showOverlay('loginOverlay', true);
-    initAuthFlow();
-  </script>
-</body>
-</html>
+      const box = document
