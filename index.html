@@ -570,9 +570,121 @@
       if (totalMes > 0) {
         exportBtns.style.display = 'flex';
         desenharGrafico(gastosMes);
-        montarResumoCategorias(gastosMes, totalMes);
-        info.textContent = `Mês: ${formatarMes(mesSelecionado)} • Lançamentos: ${gastosMes.length}`;
-        info.style.display = 'block';
+       function montarResumoCategorias(gastosMes, totalMes) {
+  const legenda = document.getElementById('legendaCategorias');
+  const tabela = document.getElementById('tabelaCategorias');
+
+  const porCat = {};
+  const stats = {};
+  const itensPorCat = {};
+
+  gastosMes.forEach(g => {
+    const cat = g.categoria || 'Outros';
+    const v = Number(g.valor) || 0;
+
+    porCat[cat] = (porCat[cat] || 0) + v;
+
+    if (!stats[cat]) stats[cat] = { qtd: 0, max: v, min: v, total: 0 };
+    stats[cat].qtd += 1;
+    stats[cat].total += v;
+    stats[cat].max = Math.max(stats[cat].max, v);
+    stats[cat].min = Math.min(stats[cat].min, v);
+
+    if (!itensPorCat[cat]) itensPorCat[cat] = [];
+    itensPorCat[cat].push({
+      desc: (g.descricao && String(g.descricao).trim()) ? String(g.descricao).trim() : '(sem descrição)',
+      valor: v,
+      data: g.data || ''
+    });
+  });
+
+  // Ordena categorias por total (desc)
+  const entries = Object.entries(porCat).sort((a, b) => b[1] - a[1]);
+
+  // Ordena itens dentro da categoria por valor (desc) e depois por data (desc)
+  entries.forEach(([cat]) => {
+    itensPorCat[cat].sort((a, b) => (b.valor - a.valor) || (String(b.data).localeCompare(String(a.data))));
+  });
+
+  // ===== Legenda (cards) com itens abaixo =====
+  legenda.innerHTML = entries.map(([cat, val], idx) => {
+    const pct = totalMes > 0 ? (val / totalMes) * 100 : 0;
+    const cor = PALETA[idx % PALETA.length];
+    const qtd = stats[cat].qtd;
+    const media = val / qtd;
+
+    const itensHtml = (itensPorCat[cat] || []).map(it => `
+      <div class="subitem">
+        <div class="name">${escapeHtml(it.desc)}</div>
+        <div class="val">${formatarMoeda(it.valor)}</div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="legend-item" style="flex-direction: column; align-items: stretch;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <div class="legend-left">
+            <span class="swatch" style="background:${cor}"></span>
+            <div style="min-width:0">
+              <div class="legend-title">${escapeHtml(cat)}</div>
+              <div class="legend-sub">Qtd: ${qtd} • Média: ${formatarMoeda(media)}</div>
+            </div>
+          </div>
+          <div class="legend-right">
+            <div class="legend-value">${formatarMoeda(val)}</div>
+            <div class="legend-pct">${pct.toFixed(1)}%</div>
+          </div>
+        </div>
+
+        <div class="subitems">
+          ${itensHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+  legenda.style.display = 'block';
+
+  // ===== Tabela com uma “linha detalhe” logo abaixo =====
+  const linhas = entries.map(([cat, val]) => {
+    const pct = totalMes > 0 ? (val / totalMes) * 100 : 0;
+    const qtd = stats[cat].qtd;
+    const media = val / qtd;
+
+    const itensLinha = (itensPorCat[cat] || []).map(it =>
+      `${escapeHtml(it.desc)} — ${formatarMoeda(it.valor)}`
+    ).join('<br>');
+
+    return `
+      <tr>
+        <td>${escapeHtml(cat)}</td>
+        <td>${qtd}</td>
+        <td>${formatarMoeda(media)}</td>
+        <td>${formatarMoeda(stats[cat].min)}</td>
+        <td>${formatarMoeda(stats[cat].max)}</td>
+        <td>${pct.toFixed(1)}%</td>
+        <td>${formatarMoeda(val)}</td>
+      </tr>
+      <tr>
+        <td colspan="7" style="white-space: normal; color:#333; font-size:12px; padding-top:6px;">
+          ${itensLinha || '<span style="color:#666;">(Sem itens)</span>'}
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  tabela.innerHTML = `
+    <table class="report">
+      <thead>
+        <tr>
+          <th>Categoria</th><th>Qtd</th><th>Média</th><th>Menor</th><th>Maior</th><th>%</th><th>Total</th>
+        </tr>
+      </thead>
+      <tbody>${linhas}</tbody>
+    </table>
+  `;
+  tabela.style.display = 'block';
+}
+
       } else {
         canvas.style.display = 'none';
         exportBtns.style.display = 'none';
