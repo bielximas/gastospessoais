@@ -1,317 +1,212 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gastos - Assistente Pessoal</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gastos</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh; padding: 20px;
-    }
-    .container { max-width: 700px; margin: 0 auto; }
-    h1 { color: white; text-align: center; margin: 8px 0 16px; font-size: 24px; }
-
-    .statusbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 10px; color:#fff; font-size: 12px; }
-    .pill { display:inline-block; font-size: 12px; padding: 6px 10px; border-radius: 999px; background:#eef2ff; color:#273c75; font-weight: 900; }
-    .statusbar a { color:#fff; text-decoration: underline; cursor:pointer; margin-left: 10px; }
-
-    .tabs { display: flex; background: rgba(255,255,255,0.95); border-radius: 15px; margin-bottom: 16px; overflow: hidden; }
-    .tab { flex: 1; padding: 14px; background: none; border: none; font-size: 15px; cursor: pointer; transition: all 0.2s; }
-    .tab.active { background: #007AFF; color: white; font-weight: 900; }
-
-    .tab-content {
-      background: rgba(255,255,255,0.95);
-      border-radius: 20px;
-      padding: 18px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      display: none;
-    }
-    .tab-content.active { display: block; }
-
-    .form-group { margin-bottom: 14px; }
-    label { display: block; margin-bottom: 8px; font-weight: 800; color: #333; }
-    input, select {
-      width: 100%; padding: 12px; border: 2px solid #e1e5e9;
-      border-radius: 10px; font-size: 16px;
-    }
-    input:focus, select:focus { outline: none; border-color: #007AFF; }
-
-    button {
-      background: #007AFF; color: white; border: none; padding: 14px 16px;
-      border-radius: 10px; font-size: 16px; font-weight: 900; cursor: pointer;
-      width: 100%; margin-top: 8px; transition: background 0.2s;
-    }
-    button:hover { background: #0056cc; }
-    button.secondary { background: #2c2c2e; }
-    button.secondary:hover { background: #111; }
-    button.danger { background: #FF3B30; }
-    button.danger:hover { background: #D32F2F; }
-
-    .filter-group { display: flex; gap: 10px; margin-bottom: 14px; }
-    .filter-group select { flex: 1; }
-
-    .summary { background: #F2F2F7; padding: 16px; border-radius: 15px; text-align: center; margin: 12px 0; }
-    .total-amount { font-size: 28px; font-weight: 900; color: #FF3B30; }
-
-    .list-item {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 14px; background: white; margin-bottom: 10px; border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-      gap: 10px;
-    }
-    .list-info { flex: 1; min-width: 0; }
-    .list-title { font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .list-date { font-size: 12px; color: #666; margin-top: 4px; }
-    .list-amount { font-size: 16px; font-weight: 900; color: #333; white-space: nowrap; }
-
-    .empty-state { text-align: center; color: #666; padding: 30px 10px; }
-
-    .export-btns { display: flex; gap: 10px; margin-top: 12px; }
-    .export-btns button { flex: 1; padding: 12px; margin-top: 0; }
-
-    canvas { display: block; margin: 16px auto 6px; border-radius: 20px; }
-
-    /* Detalhe por categoria */
-    .cat-details {
-      margin-top: 14px;
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-      overflow: hidden;
-    }
-    .cat-details details { border-bottom: 1px solid #eee; }
-    .cat-details details:last-child { border-bottom: none; }
-    .cat-details summary {
-      list-style: none;
-      cursor: pointer;
-      padding: 12px 14px;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: baseline;
-    }
-    .cat-details summary::-webkit-details-marker { display: none; }
-    .cat-name { font-weight: 900; color: #111; }
-    .cat-meta { font-size: 12px; color: #666; margin-top: 4px; }
-    .cat-right { text-align: right; }
-    .cat-total { font-weight: 900; color: #111; }
-    .cat-pct { font-size: 12px; color: #666; }
-
-    .cat-items { padding: 0 14px 12px; }
-    .cat-item {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 8px 0;
-      border-top: 1px dashed #eee;
-      font-size: 13px;
-    }
-    .cat-item .left { min-width: 0; }
-    .cat-item .desc { font-weight: 800; color:#222; overflow:hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .cat-item .sub { font-size: 12px; color:#666; margin-top: 2px; }
-    .cat-item .val { font-weight: 900; color:#111; white-space: nowrap; }
-
-    .small-muted { font-size: 12px; color: #666; margin-top: 10px; text-align: center; }
-
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:16px}
+    .container{max-width:760px;margin:0 auto}
+    h1{color:#fff;text-align:center;margin:10px 0 14px}
+    .status{display:flex;justify-content:space-between;align-items:center;color:#fff;font-size:12px;margin-bottom:10px}
+    .pill{background:#eef2ff;color:#273c75;font-weight:800;border-radius:999px;padding:6px 10px;display:inline-block}
+    .status a{color:#fff;text-decoration:underline;cursor:pointer;margin-left:10px}
+    .tabs{display:flex;background:rgba(255,255,255,.95);border-radius:14px;overflow:hidden;margin-bottom:12px}
+    .tab{flex:1;border:0;background:transparent;padding:12px;font-weight:800;cursor:pointer}
+    .tab.active{background:#007AFF;color:#fff}
+    .card{background:rgba(255,255,255,.95);border-radius:18px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none}
+    .card.active{display:block}
+    label{display:block;font-weight:800;margin:12px 0 8px;color:#222}
+    input,select{width:100%;padding:12px;border:2px solid #e1e5e9;border-radius:12px;font-size:16px}
+    input:focus,select:focus{outline:none;border-color:#007AFF}
+    button{width:100%;border:0;background:#007AFF;color:#fff;padding:12px 14px;border-radius:12px;font-weight:900;font-size:16px;cursor:pointer;margin-top:12px}
+    button.secondary{background:#2c2c2e}
+    button.danger{background:#FF3B30}
+    .row{display:flex;gap:10px}
+    .row>*{flex:1}
+    .summary{background:#f2f2f7;border-radius:14px;padding:14px;text-align:center;margin:12px 0}
+    .total{font-size:26px;font-weight:900;color:#FF3B30}
+    .empty{color:#666;text-align:center;padding:26px 10px}
+    .item{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .it-left{min-width:0;flex:1}
+    .it-title{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .it-sub{font-size:12px;color:#666;margin-top:4px}
+    .it-val{font-weight:900;white-space:nowrap}
+    .filters{display:flex;gap:10px;margin-bottom:12px}
+    .filters select{flex:1}
+    .export{display:flex;gap:10px;margin-top:12px}
+    .export button{margin-top:0;flex:1;padding:10px}
+    /* Relatório detalhado */
+    .cats{margin-top:12px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+    .cats details{border-bottom:1px solid #eee}
+    .cats details:last-child{border-bottom:none}
+    .cats summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .cats summary::-webkit-details-marker{display:none}
+    .cat-name{font-weight:900;color:#111}
+    .cat-meta{font-size:12px;color:#666;margin-top:3px}
+    .cat-total{font-weight:900;color:#111;text-align:right}
+    .cat-pct{font-size:12px;color:#666;text-align:right}
+    .cat-items{padding:0 14px 12px}
+    .cat-item{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px dashed #eee;font-size:13px}
+    .cat-item .desc{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
+    .cat-item .sub{font-size:12px;color:#666;margin-top:2px}
+    .cat-item .val{font-weight:900;white-space:nowrap}
     /* Overlays */
-    .overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-      display: none; align-items: center; justify-content: center; padding: 16px; z-index: 9999;
-    }
-    .overlay.show { display: flex; }
-    .card {
-      width: 100%; max-width: 560px; background: rgba(255,255,255,0.98);
-      border-radius: 18px; padding: 18px; box-shadow: 0 12px 30px rgba(0,0,0,0.25);
-    }
-    .card h2 { font-size: 18px; margin-bottom: 10px; color: #111; }
-    .top-actions { display: flex; gap: 10px; margin-top: 10px; }
-    .top-actions button { flex: 1; margin-top: 0; }
-    .note { font-size: 12px; color: #555; margin-top: 8px; line-height: 1.35; }
-
-    @media print {
-      body { background: white; padding: 0; }
-      .tabs, .statusbar, #loginOverlay, #pinOverlay, .export-btns { display: none !important; }
-      .tab-content { box-shadow: none; }
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:14px;z-index:9999}
+    .overlay.show{display:flex}
+    .modal{width:100%;max-width:560px;background:rgba(255,255,255,.98);border-radius:18px;padding:16px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+    .modal h2{font-size:18px;margin-bottom:10px;color:#111}
+    .note{font-size:12px;color:#555;margin-top:8px;line-height:1.35}
+    .msg{font-size:12px;color:#c0392b;font-weight:900;margin-top:8px;min-height:16px}
+    @media print{
+      body{background:#fff;padding:0}
+      .tabs,.status,.overlay,.export{display:none!important}
+      .card{box-shadow:none}
+      .card{display:block}
     }
   </style>
 </head>
-
 <body>
   <div class="container">
-    <div class="statusbar">
+    <div class="status">
       <div><span class="pill" id="syncStatus">Sincronização: desconectada</span></div>
       <div>
-        <a id="btnChangePin" style="display:none;">Trocar PIN</a>
-        <a id="btnLogout" style="display:none;">Sair</a>
+        <a id="btnChangePin" style="display:none">Trocar PIN</a>
+        <a id="btnLogout" style="display:none">Sair</a>
       </div>
     </div>
 
     <h1>Gastos</h1>
 
     <div class="tabs">
-      <button class="tab active" onclick="showTab('novo', event)">Novo</button>
-      <button class="tab" onclick="showTab('lista', event)">Lista</button>
-      <button class="tab" onclick="showTab('relatorio', event)">Relatório</button>
+      <button class="tab active" data-tab="novo">Novo</button>
+      <button class="tab" data-tab="lista">Lista</button>
+      <button class="tab" data-tab="relatorio">Relatório</button>
     </div>
 
-    <!-- NOVO -->
-    <div id="novo" class="tab-content active">
-      <div class="form-group">
-        <label>Data</label>
-        <input type="date" id="data" />
+    <section id="novo" class="card active">
+      <label>Data</label>
+      <input type="date" id="data">
+
+      <label>Categoria</label>
+      <select id="categoria">
+        <option value="">Selecione...</option>
+        <option>Alimentação</option>
+        <option>Transporte</option>
+        <option>Mercado</option>
+        <option>Contas</option>
+        <option>Lazer</option>
+        <option>Compra na internet</option>
+        <option>Jogos</option>
+        <option>Outros</option>
+      </select>
+
+      <label>Descrição</label>
+      <input id="descricao" placeholder="Ex: cerveja, churrasco...">
+
+      <label>Forma de pagamento</label>
+      <select id="forma">
+        <option value="">Selecione...</option>
+        <option>Pix</option>
+        <option>Crédito</option>
+        <option>Débito</option>
+        <option>Espécie</option>
+      </select>
+
+      <label>Valor (R$)</label>
+      <input type="number" id="valor" step="0.01" placeholder="0,00">
+
+      <button id="btnSalvar">Salvar</button>
+    </section>
+
+    <section id="lista" class="card">
+      <div class="filters">
+        <select id="filtroMes"><option value="">Todos os meses</option></select>
+        <select id="filtroCat"><option value="">Todas categorias</option></select>
       </div>
 
-      <div class="form-group">
-        <label>Categoria</label>
-        <select id="categoria">
-          <option value="">Selecione...</option>
-          <option value="Alimentação">Alimentação</option>
-          <option value="Transporte">Transporte</option>
-          <option value="Mercado">Mercado</option>
-          <option value="Contas">Contas</option>
-          <option value="Lazer">Lazer</option>
-          <option value="Compra na internet">Compra na internet</option>
-          <option value="Jogos">Jogos</option>
-          <option value="Outros">Outros</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Descrição</label>
-        <input type="text" id="descricao" placeholder="Ex: cerveja, churrasco..." />
-      </div>
-
-      <div class="form-group">
-        <label>Forma de pagamento</label>
-        <select id="forma">
-          <option value="">Selecione...</option>
-          <option value="Pix">Pix</option>
-          <option value="Crédito">Crédito</option>
-          <option value="Débito">Débito</option>
-          <option value="Espécie">Espécie</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Valor (R$)</label>
-        <input type="number" id="valor" step="0.01" placeholder="0,00" />
-      </div>
-
-      <button onclick="salvarGasto()">Salvar</button>
-    </div>
-
-    <!-- LISTA -->
-    <div id="lista" class="tab-content">
-      <div class="filter-group">
-        <select id="filtroMes" onchange="filtrarGastos()">
-          <option value="">Todos os meses</option>
-        </select>
-        <select id="filtroCat" onchange="filtrarGastos()">
-          <option value="">Todas categorias</option>
-        </select>
-      </div>
-
-      <div id="summaryLista" class="summary" style="display:none;">
+      <div class="summary" id="sumLista" style="display:none">
         <div>Total selecionado</div>
-        <div id="totalLista" class="total-amount">R$ 0,00</div>
+        <div class="total" id="totalLista">R$ 0,00</div>
       </div>
 
       <div id="listaGastos"></div>
+      <div class="empty" id="emptyLista">Nenhum gasto ainda.</div>
+    </section>
 
-      <div id="emptyLista" class="empty-state">
-        <div>Nenhum gasto ainda</div>
-        <div>Vá em “Novo” para começar.</div>
-      </div>
-    </div>
-
-    <!-- RELATÓRIO -->
-    <div id="relatorio" class="tab-content">
-      <div class="filter-group">
-        <select id="relatorioMes" onchange="gerarRelatorio()">
-          <option value="">Selecione um mês</option>
-        </select>
+    <section id="relatorio" class="card">
+      <div class="filters">
+        <select id="relatorioMes"><option value="">Selecione um mês</option></select>
       </div>
 
-      <div id="summaryRelatorio" class="summary" style="display:none;">
+      <div class="summary" id="sumRel" style="display:none">
         <div>Total do mês</div>
-        <div id="totalRelatorio" class="total-amount">R$ 0,00</div>
+        <div class="total" id="totalRel">R$ 0,00</div>
       </div>
 
-      <canvas id="graficoCategorias" width="320" height="320" style="display:none;"></canvas>
+      <div id="detalheCategorias" class="cats" style="display:none"></div>
 
-      <div id="detalheCategorias" class="cat-details" style="display:none;"></div>
-
-      <div class="export-btns" id="exportBtns" style="display:none;">
-        <button onclick="exportarCSV()">CSV (Excel)</button>
-        <button onclick="imprimirRelatorio()">PDF</button>
+      <div class="export" id="exportBtns" style="display:none">
+        <button id="btnCsv">CSV (Excel)</button>
+        <button id="btnPdf">PDF</button>
       </div>
 
-      <div id="emptyRelatorio" class="empty-state">
-        <div>Selecione um mês para ver o relatório.</div>
-      </div>
-
-      <div class="small-muted" id="infoRelatorio" style="display:none;"></div>
-    </div>
+      <div class="empty" id="emptyRel">Selecione um mês para ver o relatório.</div>
+      <div class="note" id="infoRel" style="display:none;text-align:center"></div>
+    </section>
   </div>
 
-  <!-- Overlay Login -->
+  <!-- LOGIN -->
   <div class="overlay" id="loginOverlay">
-    <div class="card">
+    <div class="modal">
       <h2>Entrar para sincronizar</h2>
 
-      <div class="top-actions">
+      <div class="row">
         <button id="btnGoogle">Entrar com Google</button>
-        <button class="secondary" id="btnMostrarEmail">Email/senha</button>
+        <button class="secondary" id="btnToggleEmail">Email/senha</button>
       </div>
 
-      <div id="emailBox" style="display:none; margin-top:12px;">
-        <div class="form-group">
-          <label>Email</label>
-          <input id="authEmail" type="email" placeholder="seuemail@exemplo.com" autocomplete="email">
-        </div>
-        <div class="form-group">
-          <label>Senha</label>
-          <input id="authPass" type="password" placeholder="••••••••" autocomplete="current-password">
-        </div>
-        <div class="top-actions">
+      <div id="emailBox" style="display:none;margin-top:12px">
+        <label>Email</label>
+        <input id="authEmail" type="email" autocomplete="email">
+
+        <label>Senha</label>
+        <input id="authPass" type="password" autocomplete="current-password">
+
+        <div class="row">
           <button id="btnEntrar">Entrar</button>
-          <button class="secondary" id="btnCriarConta">Criar conta</button>
+          <button class="secondary" id="btnCriar">Criar conta</button>
         </div>
       </div>
 
-      <div class="note" id="authMsg" style="color:#c0392b; font-weight:900;"></div>
-      <div class="note">Depois do login, você cria/digita um PIN para travar este aparelho.</div>
+      <div class="msg" id="authMsg"></div>
+      <div class="note">Depois do login, você cria/digita um PIN para travar este navegador.</div>
     </div>
   </div>
 
-  <!-- Overlay PIN -->
+  <!-- PIN -->
   <div class="overlay" id="pinOverlay">
-    <div class="card">
-      <h2>PIN deste aparelho</h2>
+    <div class="modal">
+      <h2>PIN deste navegador</h2>
 
-      <div class="form-group" id="pinSetGroup" style="display:none;">
+      <div id="pinSet" style="display:none">
         <label>Crie um PIN (4 a 8 dígitos)</label>
         <input id="pinNovo" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 1234">
-        <label style="margin-top:10px;">Repita o PIN</label>
+        <label style="margin-top:10px">Repita o PIN</label>
         <input id="pinNovo2" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 1234">
         <button id="btnSalvarPin">Salvar PIN</button>
       </div>
 
-      <div class="form-group" id="pinEnterGroup" style="display:none;">
+      <div id="pinEnter" style="display:none">
         <label>Digite seu PIN</label>
         <input id="pinDigitado" inputmode="numeric" pattern="[0-9]*" placeholder="••••">
         <button id="btnDesbloquear">Desbloquear</button>
       </div>
 
       <!-- Trocar PIN removido do overlay -->
-      <div class="top-actions" style="margin-top:12px;">
-        <button class="danger" id="btnLimparPin">Esqueci o PIN</button>
-      </div>
-
-      <div class="note" id="pinMsg" style="color:#c0392b; font-weight:900;"></div>
+      <button class="danger" id="btnEsqueciPin">Esqueci o PIN</button>
+      <div class="msg" id="pinMsg"></div>
       <div class="note">Para resetar o PIN, você precisa confirmar sua conta Google.</div>
     </div>
   </div>
@@ -319,30 +214,20 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import {
-      getAuth,
-      onAuthStateChanged,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      signInWithPopup,
-      signInWithRedirect,
-      getRedirectResult,
+      getAuth, onAuthStateChanged,
+      signInWithEmailAndPassword, createUserWithEmailAndPassword,
+      signInWithPopup, signInWithRedirect, getRedirectResult,
       GoogleAuthProvider,
-      reauthenticateWithPopup,
-      reauthenticateWithRedirect,
+      reauthenticateWithPopup, reauthenticateWithRedirect,
       signOut
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import {
-      getFirestore,
-      collection,
-      doc,
-      addDoc,
-      deleteDoc,
-      onSnapshot,
-      query,
-      orderBy
+      getFirestore, collection, doc,
+      addDoc, deleteDoc,
+      onSnapshot, query, orderBy
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // ===== Firebase config (o seu) =====
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAIKbBCn96YbinrRHkDcpvZ4OY7j9Z_ES8",
       authDomain: "gastos-pessoais-a716a.firebaseapp.com",
@@ -356,458 +241,488 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // ===== Estado =====
-    let gastos = [];
+    // Estado
     let userUid = null;
+    let gastos = [];
     let unsub = null;
-    let appUnlocked = false;
+    let unlocked = false;
 
-    const PALETA = ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#2ecc71','#e74c3c','#3498db','#9b59b6'];
-    const PIN_HASH_KEY = 'pinHash_v1';
-    const PENDING_PIN_RESET = 'pendingPinReset_v1';
+    // Storage keys
+    const PIN_HASH_KEY = "pinHash_v1";
+    const PENDING_PIN_RESET = "pendingPinReset_v1";
 
-    // ===== Elementos =====
-    const syncStatus = document.getElementById('syncStatus');
-    const btnLogout = document.getElementById('btnLogout');
-    const btnChangePin = document.getElementById('btnChangePin');
-    const authMsg = document.getElementById('authMsg');
+    // UI refs
+    const syncStatus = document.getElementById("syncStatus");
+    const btnLogout = document.getElementById("btnLogout");
+    const btnChangePin = document.getElementById("btnChangePin");
+    const loginOverlay = document.getElementById("loginOverlay");
+    const pinOverlay = document.getElementById("pinOverlay");
+    const authMsg = document.getElementById("authMsg");
+    const pinMsg = document.getElementById("pinMsg");
 
-    // ===== UI helpers =====
-    function setStatus(t) { syncStatus.textContent = t; }
-    function showOverlay(id, show) { document.getElementById(id).classList.toggle('show', !!show); }
+    // Defaults
+    document.getElementById("data").value = new Date().toISOString().slice(0,10);
 
-    // Data default
-    document.getElementById('data').value = new Date().toISOString().split('T')[0];
+    function setStatus(t){ syncStatus.textContent = t; }
+    function show(el, on){ el.classList.toggle("show", !!on); }
 
     // Tabs
-    window.showTab = function(nome, ev) {
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.getElementById(nome).classList.add('active');
-      if (ev && ev.target) ev.target.classList.add('active');
-      if (nome === 'lista') atualizarLista();
-      if (nome === 'relatorio') gerarRelatorio();
-    };
+    const tabs = [...document.querySelectorAll(".tab")];
+    const cards = [...document.querySelectorAll(".card")];
+    tabs.forEach(t => t.addEventListener("click", () => {
+      tabs.forEach(x=>x.classList.remove("active"));
+      t.classList.add("active");
+      const id = t.dataset.tab;
+      cards.forEach(c => c.classList.toggle("active", c.id === id));
+      if (id === "lista") renderLista();
+      if (id === "relatorio") renderRelatorio();
+    }));
 
-    // ===== Helpers =====
-    function somaGastos(arr) { return arr.reduce((t,g) => t + (Number(g.valor) || 0), 0); }
-    function formatarAnoMes(dataStr) { return (dataStr && dataStr.length >= 7) ? dataStr.slice(0,7) : ''; }
-    function formatarMes(anoMes) {
-      if (!anoMes) return '';
-      const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-      const [ano, mes] = anoMes.split('-');
-      const idx = Math.max(1, Math.min(12, parseInt(mes,10))) - 1;
-      return `${meses[idx]} ${ano}`;
-    }
-    function formatarData(data) { return new Date(String(data) + 'T00:00:00').toLocaleDateString('pt-BR'); }
-    function formatarMoeda(v) { return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v)||0); }
-    function escapeHtml(str) {
-      return String(str ?? '')
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;')
-        .replaceAll('"','&quot;')
-        .replaceAll("'","&#039;");
-    }
+    // Helpers
+    const moeda = (v)=> new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(Number(v)||0);
+    const anoMes = (d)=> (d && d.length>=7) ? d.slice(0,7) : "";
+    const dataBR = (d)=> new Date(String(d)+"T00:00:00").toLocaleDateString("pt-BR");
+    const esc = (s)=> String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 
-    // ===== PIN (SHA-256) =====
-    async function sha256Hex(str) {
+    function soma(arr){ return arr.reduce((t,g)=>t+(Number(g.valor)||0),0); }
+
+    async function sha256Hex(str){
       const enc = new TextEncoder().encode(str);
-      const buf = await crypto.subtle.digest('SHA-256', enc);
-      return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-    function pinUiMode(mode) {
-      document.getElementById('pinSetGroup').style.display = (mode === 'set') ? 'block' : 'none';
-      document.getElementById('pinEnterGroup').style.display = (mode === 'enter') ? 'block' : 'none';
-      document.getElementById('pinMsg').textContent = '';
-      document.getElementById('pinNovo').value = '';
-      document.getElementById('pinNovo2').value = '';
-      document.getElementById('pinDigitado').value = '';
-    }
-    async function requirePinUnlock() {
-      const hash = localStorage.getItem(PIN_HASH_KEY);
-      showOverlay('pinOverlay', true);
-      pinUiMode(hash ? 'enter' : 'set');
-    }
-    async function unlockIfReady() {
-      if (userUid && appUnlocked) {
-        showOverlay('loginOverlay', false);
-        showOverlay('pinOverlay', false);
-        btnLogout.style.display = 'inline';
-        btnChangePin.style.display = 'inline';
-        setStatus('Sincronização: ativa');
-        atualizarTudo();
-      }
+      const buf = await crypto.subtle.digest("SHA-256", enc);
+      return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
     }
 
-    document.getElementById('btnSalvarPin').addEventListener('click', async () => {
-      const p1 = (document.getElementById('pinNovo').value || '').trim();
-      const p2 = (document.getElementById('pinNovo2').value || '').trim();
-      const msg = document.getElementById('pinMsg');
+    function pinMode(mode){
+      document.getElementById("pinSet").style.display = (mode==="set") ? "block" : "none";
+      document.getElementById("pinEnter").style.display = (mode==="enter") ? "block" : "none";
+      pinMsg.textContent = "";
+      document.getElementById("pinNovo").value = "";
+      document.getElementById("pinNovo2").value = "";
+      document.getElementById("pinDigitado").value = "";
+    }
 
-      if (!/^\d{4,8}$/.test(p1)) { msg.textContent = 'PIN precisa ter 4 a 8 dígitos.'; return; }
-      if (p1 !== p2) { msg.textContent = 'Os PINs não conferem.'; return; }
+    async function requirePin(){
+      const has = !!localStorage.getItem(PIN_HASH_KEY);
+      show(pinOverlay, true);
+      pinMode(has ? "enter" : "set");
+    }
 
+    function ready(){
+      return !!userUid && unlocked;
+    }
+
+    function unlockUI(){
+      show(loginOverlay,false);
+      show(pinOverlay,false);
+      btnLogout.style.display = "inline";
+      btnChangePin.style.display = "inline";
+      setStatus("Sincronização: ativa");
+      refreshSelects();
+      renderLista();
+      renderRelatorio();
+    }
+
+    // PIN set
+    document.getElementById("btnSalvarPin").addEventListener("click", async ()=>{
+      const p1 = (document.getElementById("pinNovo").value||"").trim();
+      const p2 = (document.getElementById("pinNovo2").value||"").trim();
+      if(!/^\d{4,8}$/.test(p1)){ pinMsg.textContent="PIN precisa ter 4 a 8 dígitos."; return; }
+      if(p1!==p2){ pinMsg.textContent="Os PINs não conferem."; return; }
       localStorage.setItem(PIN_HASH_KEY, await sha256Hex(p1));
-      appUnlocked = true;
-      await unlockIfReady();
+      unlocked = true;
+      if(ready()) unlockUI();
     });
 
-    document.getElementById('btnDesbloquear').addEventListener('click', async () => {
-      const pin = (document.getElementById('pinDigitado').value || '').trim();
-      const msg = document.getElementById('pinMsg');
+    // PIN enter
+    document.getElementById("btnDesbloquear").addEventListener("click", async ()=>{
+      const pin = (document.getElementById("pinDigitado").value||"").trim();
       const hash = localStorage.getItem(PIN_HASH_KEY);
-
-      if (!/^\d{4,8}$/.test(pin)) { msg.textContent = 'PIN inválido.'; return; }
-      if ((await sha256Hex(pin)) !== hash) { msg.textContent = 'PIN incorreto.'; return; }
-
-      appUnlocked = true;
-      await unlockIfReady();
+      if(!/^\d{4,8}$/.test(pin)){ pinMsg.textContent="PIN inválido."; return; }
+      if((await sha256Hex(pin))!==hash){ pinMsg.textContent="PIN incorreto."; return; }
+      unlocked = true;
+      if(ready()) unlockUI();
     });
 
-    // Trocar PIN (somente dentro do app, após destravar)
-    btnChangePin.addEventListener('click', async () => {
+    // Trocar PIN (só dentro do app)
+    btnChangePin.addEventListener("click", async ()=>{
       const hash = localStorage.getItem(PIN_HASH_KEY);
-      if (!hash) { alert('Nenhum PIN definido ainda.'); await requirePinUnlock(); return; }
+      if(!hash){ alert("Nenhum PIN definido."); await requirePin(); return; }
 
-      const atual = prompt('Digite o PIN atual para permitir a troca:');
-      if (atual === null) return;
-      const atualTrim = String(atual).trim();
-      if (!/^\d{4,8}$/.test(atualTrim)) { alert('PIN inválido.'); return; }
+      const atual = prompt("Digite o PIN atual:");
+      if(atual === null) return;
+      const a = String(atual).trim();
+      if(!/^\d{4,8}$/.test(a)){ alert("PIN inválido."); return; }
+      if((await sha256Hex(a))!==hash){ alert("PIN atual incorreto."); return; }
 
-      const h2 = await sha256Hex(atualTrim);
-      if (h2 !== hash) { alert('PIN atual incorreto.'); return; }
+      const n1 = prompt("Novo PIN (4 a 8 dígitos):");
+      if(n1 === null) return;
+      const b = String(n1).trim();
+      if(!/^\d{4,8}$/.test(b)){ alert("Novo PIN inválido."); return; }
 
-      const novo = prompt('Digite o novo PIN (4 a 8 dígitos):');
-      if (novo === null) return;
-      const novoTrim = String(novo).trim();
-      if (!/^\d{4,8}$/.test(novoTrim)) { alert('Novo PIN inválido.'); return; }
+      const n2 = prompt("Repita o novo PIN:");
+      if(n2 === null) return;
+      const c = String(n2).trim();
+      if(b!==c){ alert("Os PINs não conferem."); return; }
 
-      const novo2 = prompt('Repita o novo PIN:');
-      if (novo2 === null) return;
-      const novo2Trim = String(novo2).trim();
-      if (novoTrim !== novo2Trim) { alert('Os PINs não conferem.'); return; }
-
-      localStorage.setItem(PIN_HASH_KEY, await sha256Hex(novoTrim));
-      alert('PIN alterado com sucesso neste aparelho.');
+      localStorage.setItem(PIN_HASH_KEY, await sha256Hex(b));
+      alert("PIN alterado com sucesso neste navegador.");
     });
 
-    // Esqueci o PIN (com reautenticação Google)
-    document.getElementById('btnLimparPin').addEventListener('click', async () => {
-      const msg = document.getElementById('pinMsg');
-      msg.textContent = '';
+    // Esqueci o PIN (reauth Google) [web:281]
+    document.getElementById("btnEsqueciPin").addEventListener("click", async ()=>{
+      pinMsg.textContent = "";
+      if(!confirm("Para resetar o PIN, confirme sua conta Google. Continuar?")) return;
 
-      if (!confirm('Para resetar o PIN, confirme sua conta Google. Continuar?')) return;
+      const user = auth.currentUser;
+      if(!user){ pinMsg.textContent="Você não está logado."; return; }
 
-      try {
-        const user = auth.currentUser;
-        if (!user) { msg.textContent = 'Você não está logado.'; return; }
+      const provider = new GoogleAuthProvider();
 
-        const provider = new GoogleAuthProvider();
-
-        try {
+      try{
+        try{
           await reauthenticateWithPopup(user, provider);
           localStorage.removeItem(PIN_HASH_KEY);
-          appUnlocked = false;
-          pinUiMode('set');
-          msg.textContent = 'PIN removido. Crie um novo PIN.';
-        } catch (_) {
-          sessionStorage.setItem(PENDING_PIN_RESET, '1');
+          unlocked = false;
+          pinMode("set");
+          pinMsg.textContent = "PIN removido. Crie um novo PIN.";
+        } catch {
+          sessionStorage.setItem(PENDING_PIN_RESET, "1");
           await reauthenticateWithRedirect(user, provider);
         }
-      } catch (e) {
+      } catch (e){
         console.error(e);
-        msg.textContent = 'Não foi possível confirmar sua conta Google.';
+        pinMsg.textContent = "Não foi possível confirmar sua conta Google.";
       }
     });
 
-    // ===== Login UI =====
-    document.getElementById('btnMostrarEmail').addEventListener('click', () => {
-      const box = document.getElementById('emailBox');
-      box.style.display = (box.style.display === 'none') ? 'block' : 'none';
+    // Login UI
+    document.getElementById("btnToggleEmail").addEventListener("click", ()=>{
+      const box = document.getElementById("emailBox");
+      box.style.display = (box.style.display==="none") ? "block" : "none";
     });
 
-    function showAuthError(e) {
-      authMsg.textContent = (e && e.message) ? e.message : 'Erro ao autenticar.';
+    function authError(e){
+      authMsg.textContent = (e && e.message) ? e.message : "Erro ao autenticar.";
     }
 
-    document.getElementById('btnEntrar').addEventListener('click', async () => {
-      authMsg.textContent = '';
-      const email = (document.getElementById('authEmail').value || '').trim();
-      const pass = (document.getElementById('authPass').value || '').trim();
-      try { await signInWithEmailAndPassword(auth, email, pass); }
-      catch (e) { showAuthError(e); }
+    document.getElementById("btnEntrar").addEventListener("click", async ()=>{
+      authMsg.textContent = "";
+      const email = (document.getElementById("authEmail").value||"").trim();
+      const pass = (document.getElementById("authPass").value||"").trim();
+      try{ await signInWithEmailAndPassword(auth, email, pass); }
+      catch(e){ authError(e); }
     });
 
-    document.getElementById('btnCriarConta').addEventListener('click', async () => {
-      authMsg.textContent = '';
-      const email = (document.getElementById('authEmail').value || '').trim();
-      const pass = (document.getElementById('authPass').value || '').trim();
-      try { await createUserWithEmailAndPassword(auth, email, pass); }
-      catch (e) { showAuthError(e); }
+    document.getElementById("btnCriar").addEventListener("click", async ()=>{
+      authMsg.textContent = "";
+      const email = (document.getElementById("authEmail").value||"").trim();
+      const pass = (document.getElementById("authPass").value||"").trim();
+      try{ await createUserWithEmailAndPassword(auth, email, pass); }
+      catch(e){ authError(e); }
     });
 
-    document.getElementById('btnGoogle').addEventListener('click', async () => {
-      authMsg.textContent = '';
+    document.getElementById("btnGoogle").addEventListener("click", async ()=>{
+      authMsg.textContent = "";
       const provider = new GoogleAuthProvider();
-      try {
+      try{
         await signInWithPopup(auth, provider);
-      } catch (e) {
-        try { await signInWithRedirect(auth, provider); }
-        catch (e2) { showAuthError(e2); }
+      } catch (e){
+        try{ await signInWithRedirect(auth, provider); }
+        catch(e2){ authError(e2); }
       }
     });
 
-    btnLogout.addEventListener('click', async () => {
-      if (!confirm('Sair e bloquear o app neste aparelho?')) return;
-      appUnlocked = false;
-      if (unsub) { unsub(); unsub = null; }
+    btnLogout.addEventListener("click", async ()=>{
+      if(!confirm("Sair e bloquear este navegador?")) return;
+      unlocked = false;
+      if(unsub){ unsub(); unsub=null; }
       await signOut(auth);
-      btnLogout.style.display = 'none';
-      btnChangePin.style.display = 'none';
-      setStatus('Sincronização: desconectada');
-      showOverlay('loginOverlay', true);
+      btnLogout.style.display = "none";
+      btnChangePin.style.display = "none";
+      setStatus("Sincronização: desconectada");
+      show(loginOverlay,true);
     });
 
-    // ===== Firestore sync =====
-    function expensesColRef() {
+    // Firestore
+    function expensesCol(){
       return collection(db, `users/${userUid}/expenses`);
     }
 
-    function startRealtimeSync() {
-      if (!userUid) return;
-      if (unsub) { unsub(); unsub = null; }
-
-      const q = query(expensesColRef(), orderBy('data', 'desc'));
-      unsub = onSnapshot(q, (snap) => {
-        gastos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        setStatus('Sincronização: ativa');
-        if (appUnlocked) atualizarTudo();
-      }, (err) => {
+    function startSync(){
+      if(!userUid) return;
+      if(unsub){ unsub(); unsub=null; }
+      setStatus("Sincronização: preparando...");
+      const q = query(expensesCol(), orderBy("data","desc"));
+      unsub = onSnapshot(q, (snap)=>{
+        gastos = snap.docs.map(d=>({id:d.id, ...d.data()}));
+        if(ready()) {
+          setStatus("Sincronização: ativa");
+          refreshSelects();
+          renderLista();
+          renderRelatorio();
+        }
+      }, (err)=>{
         console.error(err);
-        setStatus('Sincronização: erro');
+        setStatus("Sincronização: erro");
       });
     }
 
-    async function initAuthFlow() {
-      // Consome resultados de redirects (login/reauth)
-      try { await getRedirectResult(auth); } catch (_) {}
+    // CRUD
+    document.getElementById("btnSalvar").addEventListener("click", async ()=>{
+      if(!userUid){ alert("Faça login para salvar."); return; }
+      if(!unlocked){ alert("Desbloqueie com PIN."); return; }
 
-      onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-          userUid = null;
-          if (unsub) { unsub(); unsub = null; }
-          appUnlocked = false;
-          btnLogout.style.display = 'none';
-          btnChangePin.style.display = 'none';
-          setStatus('Sincronização: desconectada');
-          showOverlay('loginOverlay', true);
-          return;
-        }
+      const data = document.getElementById("data").value;
+      const categoria = document.getElementById("categoria").value;
+      const descricao = (document.getElementById("descricao").value||"").trim();
+      const forma = (document.getElementById("forma").value||"").trim();
+      const valor = parseFloat(document.getElementById("valor").value) || 0;
 
-        userUid = user.uid;
-        setStatus('Sincronização: preparando...');
-        showOverlay('loginOverlay', false);
-        startRealtimeSync();
+      if(!categoria || valor<=0){ alert("Categoria e valor são obrigatórios."); return; }
 
-        // Se voltamos de um redirect de reauth para reset de PIN
-        if (sessionStorage.getItem(PENDING_PIN_RESET) === '1') {
-          sessionStorage.removeItem(PENDING_PIN_RESET);
-          localStorage.removeItem(PIN_HASH_KEY);
-          appUnlocked = false;
-          showOverlay('pinOverlay', true);
-          pinUiMode('set');
-          return;
-        }
+      await addDoc(expensesCol(), { data, categoria, descricao, forma, valor, anoMes: anoMes(data) });
 
-        await requirePinUnlock();
-        await unlockIfReady();
-      });
-    }
+      document.getElementById("descricao").value = "";
+      document.getElementById("valor").value = "";
+      document.getElementById("forma").value = "";
+    });
 
-    // ===== CRUD =====
-    window.salvarGasto = async function() {
-      if (!userUid) { alert('Faça login para salvar.'); return; }
-      if (!appUnlocked) { alert('Desbloqueie com PIN.'); return; }
-
-      const data = document.getElementById('data').value;
-      const categoria = document.getElementById('categoria').value;
-      const descricao = document.getElementById('descricao').value;
-      const forma = document.getElementById('forma').value;
-      const valor = parseFloat(document.getElementById('valor').value) || 0;
-
-      if (!categoria || valor <= 0) {
-        alert('Categoria e valor são obrigatórios.');
-        return;
-      }
-
-      const novo = {
-        data,
-        categoria,
-        descricao: (descricao || '').trim(),
-        forma: (forma || '').trim(),
-        valor,
-        anoMes: formatarAnoMes(data)
-      };
-
-      await addDoc(expensesColRef(), novo);
-
-      document.getElementById('descricao').value = '';
-      document.getElementById('valor').value = '';
-      document.getElementById('forma').value = '';
-    };
-
-    window.excluirGasto = async function(id) {
-      if (!userUid) return;
-      if (!appUnlocked) { alert('Desbloqueie com PIN.'); return; }
-      if (!confirm('Excluir este gasto?')) return;
+    async function del(id){
+      if(!confirm("Excluir este gasto?")) return;
       await deleteDoc(doc(db, `users/${userUid}/expenses/${id}`));
-    };
+    }
+    window.__del = del;
 
-    // ===== Lista =====
-    function atualizarLista() {
-      const listaEl = document.getElementById('listaGastos');
-      const emptyEl = document.getElementById('emptyLista');
-      const summaryEl = document.getElementById('summaryLista');
+    // Selects + filtros
+    const filtroMes = document.getElementById("filtroMes");
+    const filtroCat = document.getElementById("filtroCat");
+    const relMes = document.getElementById("relatorioMes");
 
-      const filtroMes = document.getElementById('filtroMes').value;
-      const filtroCat = document.getElementById('filtroCat').value;
+    filtroMes.addEventListener("change", renderLista);
+    filtroCat.addEventListener("change", renderLista);
+    relMes.addEventListener("change", renderRelatorio);
 
-      const visiveis = gastos
-        .filter(g => (!filtroMes || g.anoMes === filtroMes) && (!filtroCat || g.categoria === filtroCat))
-        .sort((a,b) => String(b.data).localeCompare(String(a.data)));
+    function refreshSelects(){
+      const meses = [...new Set(gastos.map(g=>g.anoMes).filter(Boolean))].sort().reverse();
+      const cats = [...new Set(gastos.map(g=>g.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
 
-      if (visiveis.length === 0) {
-        listaEl.innerHTML = '';
-        emptyEl.style.display = 'block';
-        summaryEl.style.display = 'none';
+      const keepFM = filtroMes.value;
+      const keepFC = filtroCat.value;
+      const keepRM = relMes.value;
+
+      filtroMes.innerHTML = `<option value="">Todos os meses</option>` + meses.map(m=>`<option value="${m}">${m}</option>`).join("");
+      relMes.innerHTML = `<option value="">Selecione um mês</option>` + meses.map(m=>`<option value="${m}">${m}</option>`).join("");
+      filtroCat.innerHTML = `<option value="">Todas categorias</option>` + cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+
+      filtroMes.value = meses.includes(keepFM) ? keepFM : "";
+      filtroCat.value = cats.includes(keepFC) ? keepFC : "";
+      relMes.value = meses.includes(keepRM) ? keepRM : "";
+    }
+
+    // Lista render
+    function renderLista(){
+      const el = document.getElementById("listaGastos");
+      const empty = document.getElementById("emptyLista");
+      const sumBox = document.getElementById("sumLista");
+      const totalEl = document.getElementById("totalLista");
+
+      const m = filtroMes.value;
+      const c = filtroCat.value;
+
+      const vis = gastos.filter(g => (!m || g.anoMes===m) && (!c || g.categoria===c))
+                        .sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+
+      if(!vis.length){
+        el.innerHTML = "";
+        empty.style.display = "block";
+        sumBox.style.display = "none";
         return;
       }
 
-      emptyEl.style.display = 'none';
-      summaryEl.style.display = 'block';
-      document.getElementById('totalLista').textContent = formatarMoeda(somaGastos(visiveis));
+      empty.style.display = "none";
+      sumBox.style.display = "block";
+      totalEl.textContent = moeda(soma(vis));
 
-      listaEl.innerHTML = visiveis.map(g => `
-        <div class="list-item">
-          <div class="list-info">
-            <div class="list-title">${escapeHtml(g.descricao || g.categoria)}</div>
-            <div class="list-date">${formatarData(g.data)} • ${escapeHtml(g.categoria || '')} • ${escapeHtml(g.forma || '')}</div>
+      el.innerHTML = vis.map(g=>`
+        <div class="item">
+          <div class="it-left">
+            <div class="it-title">${esc(g.descricao || g.categoria || "")}</div>
+            <div class="it-sub">${dataBR(g.data)} • ${esc(g.categoria||"")} ${g.forma?("• "+esc(g.forma)):""}</div>
           </div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div class="list-amount">${formatarMoeda(Number(g.valor)||0)}</div>
-            <button class="danger" onclick="excluirGasto('${g.id}')" style="width:auto; padding:8px 10px;">🗑️</button>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="it-val">${moeda(g.valor)}</div>
+            <button class="danger" style="width:auto;padding:8px 10px;margin:0" onclick="__del('${g.id}')">🗑️</button>
           </div>
         </div>
-      `).join('');
+      `).join("");
     }
 
-    window.filtrarGastos = () => atualizarLista();
+    // Relatório render
+    function renderRelatorio(){
+      const mes = relMes.value;
+      const sumRel = document.getElementById("sumRel");
+      const totalRel = document.getElementById("totalRel");
+      const detalhe = document.getElementById("detalheCategorias");
+      const empty = document.getElementById("emptyRel");
+      const info = document.getElementById("infoRel");
+      const exportBtns = document.getElementById("exportBtns");
 
-    function popularSelects() {
-      const mesesUnicos = [...new Set(gastos.map(g => g.anoMes).filter(Boolean))].sort().reverse();
-
-      document.getElementById('filtroMes').innerHTML =
-        '<option value="">Todos os meses</option>' +
-        mesesUnicos.map(m => `<option value="${m}">${formatarMes(m)}</option>`).join('');
-
-      document.getElementById('relatorioMes').innerHTML =
-        '<option value="">Selecione um mês</option>' +
-        mesesUnicos.map(m => `<option value="${m}">${formatarMes(m)}</option>`).join('');
-
-      const cats = [...new Set(gastos.map(g => g.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
-      document.getElementById('filtroCat').innerHTML =
-        '<option value="">Todas categorias</option>' +
-        cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-    }
-
-    function atualizarTudo() {
-      popularSelects();
-      atualizarLista();
-      gerarRelatorio();
-    }
-
-    // ===== Relatório =====
-    function desenharPizza(porCatOrdenado) {
-      const canvas = document.getElementById('graficoCategorias');
-      const ctx = canvas.getContext('2d');
-      const total = porCatOrdenado.reduce((s, x) => s + x.total, 0);
-
-      if (!total) {
-        canvas.style.display = 'none';
+      if(!mes){
+        sumRel.style.display = "none";
+        detalhe.style.display = "none";
+        exportBtns.style.display = "none";
+        info.style.display = "none";
+        empty.style.display = "block";
         return;
       }
 
-      canvas.width = 320;
-      canvas.height = 320;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const arr = gastos.filter(g=>g.anoMes===mes);
+      const total = soma(arr);
+      totalRel.textContent = moeda(total);
+      sumRel.style.display = "block";
+      empty.style.display = "none";
 
-      let ang = -Math.PI / 2;
-      porCatOrdenado.forEach((c, i) => {
-        const fatia = (c.total / total) * 2 * Math.PI;
-        ctx.beginPath();
-        ctx.arc(160, 160, 120, ang, ang + fatia);
-        ctx.lineTo(160, 160);
-        ctx.closePath();
-        ctx.fillStyle = PALETA[i % PALETA.length];
-        ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-        ang += fatia;
-      });
+      if(!total){
+        detalhe.style.display = "none";
+        exportBtns.style.display = "none";
+        info.style.display = "none";
+        return;
+      }
 
-      // percentuais nas fatias maiores
-      ang = -Math.PI / 2;
-      ctx.fillStyle = '#111';
-      ctx.font = '900 12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
-      porCatOrdenado.forEach((c) => {
-        const fatia = (c.total / total) * 2 * Math.PI;
-        const meio = ang + fatia / 2;
-        const pct = Math.round((c.total / total) * 100);
-        if (pct >= 6) {
-          const x = 160 + Math.cos(meio) * 85;
-          const y = 160 + Math.sin(meio) * 85;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(`${pct}%`, x, y);
-        }
-        ang += fatia;
-      });
-
-      canvas.style.display = 'block';
-    }
-
-    function montarDetalheCategorias(gastosMes, totalMes) {
-      const box = document.getElementById('detalheCategorias');
+      exportBtns.style.display = "flex";
+      info.textContent = `Mês: ${mes} • Lançamentos: ${arr.length}`;
+      info.style.display = "block";
 
       const map = {};
-      gastosMes.forEach(g => {
-        const cat = g.categoria || 'Outros';
-        const v = Number(g.valor) || 0;
-
-        if (!map[cat]) map[cat] = { cat, total: 0, itens: [], qtd: 0, min: v, max: v };
+      for(const g of arr){
+        const cat = g.categoria || "Outros";
+        const v = Number(g.valor)||0;
+        if(!map[cat]) map[cat] = {cat,total:0,itens:[],qtd:0,min:v,max:v};
         map[cat].total += v;
         map[cat].qtd += 1;
         map[cat].min = Math.min(map[cat].min, v);
         map[cat].max = Math.max(map[cat].max, v);
-
         map[cat].itens.push({
-          data: g.data || '',
-          desc: (g.descricao && String(g.descricao).trim()) ? String(g.descricao).trim() : '(sem descrição)',
-          forma: g.forma || '',
+          data: g.data || "",
+          desc: (g.descricao && String(g.descricao).trim()) ? String(g.descricao).trim() : "(sem descrição)",
+          forma: g.forma || "",
           valor: v
         });
+      }
+
+      const cats = Object.values(map).sort((a,b)=>b.total-a.total);
+      cats.forEach(c=>{
+        c.itens.sort((a,b)=>String(b.data).localeCompare(String(a.data)) || (b.valor-a.valor));
       });
 
-      const porCatOrdenado = Object.values(map).sort((a,b) => b.total - a.total);
+      detalhe.innerHTML = cats.map(c=>{
+        const pct = total ? (c.total/total*100) : 0;
+        const media = c.qtd ? (c.total/c.qtd) : 0;
 
-      // Itens: por data (mais recente primeiro) e depois por valor
-      porCatOrdenado.forEach(c => {
-        c.itens.sort((a,b) => String(b.data).localeCompare(String(a.data)) || (b.valor - a.valor));
+        const itens = c.itens.map(it=>`
+          <div class="cat-item">
+            <div class="left">
+              <div class="desc">${esc(it.desc)}</div>
+              <div class="sub">${dataBR(it.data)}${it.forma?(" • "+esc(it.forma)):""}</div>
+            </div>
+            <div class="val">${moeda(it.valor)}</div>
+          </div>
+        `).join("");
+
+        return `
+          <details>
+            <summary>
+              <div>
+                <div class="cat-name">${esc(c.cat)}</div>
+                <div class="cat-meta">Qtd: ${c.qtd} • Média: ${moeda(media)} • Menor: ${moeda(c.min)} • Maior: ${moeda(c.max)}</div>
+              </div>
+              <div>
+                <div class="cat-total">${moeda(c.total)}</div>
+                <div class="cat-pct">${pct.toFixed(1)}%</div>
+              </div>
+            </summary>
+            <div class="cat-items">${itens}</div>
+          </details>
+        `;
+      }).join("");
+
+      detalhe.style.display = "block";
+    }
+
+    // Export CSV + PDF
+    document.getElementById("btnPdf").addEventListener("click", ()=>window.print());
+
+    document.getElementById("btnCsv").addEventListener("click", ()=>{
+      const mes = relMes.value;
+      if(!mes){ alert("Selecione um mês."); return; }
+      const arr = gastos.filter(g=>g.anoMes===mes).sort((a,b)=>String(a.data).localeCompare(String(b.data)));
+
+      const SEP=";";
+      const EOL="\r\n";
+      const BOM="\ufeff";
+      const escCsv = (s)=> `"${String(s??"").replaceAll('"','""')}"`;
+      const num = (n)=> String(Number(n||0).toFixed(2)).replace(".",",");
+
+      let csv = BOM + `sep=${SEP}` + EOL;
+      csv += `Relatório${SEP}${escCsv(mes)}${EOL}${EOL}`;
+      csv += `Data${SEP}Categoria${SEP}Descrição${SEP}Forma${SEP}Valor${EOL}`;
+
+      for(const g of arr){
+        csv += `${escCsv(dataBR(g.data))}${SEP}${escCsv(g.categoria)}${SEP}${escCsv(g.descricao)}${SEP}${escCsv(g.forma)}${SEP}${num(g.valor)}${EOL}`;
+      }
+
+      csv += `${EOL}Total do mês${SEP}${SEP}${SEP}${SEP}${num(soma(arr))}${EOL}`;
+
+      const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `Relatorio_${mes}.csv`;
+      a.click();
+    });
+
+    // Auth flow init
+    async function init(){
+      show(loginOverlay, true);
+      setStatus("Sincronização: desconectada");
+
+      // consome redirects (login/reauth) [web:281]
+      try { await getRedirectResult(auth); } catch (_) {}
+
+      onAuthStateChanged(auth, async (user)=>{
+        if(!user){
+          userUid = null;
+          unlocked = false;
+          if(unsub){ unsub(); unsub=null; }
+          btnLogout.style.display = "none";
+          btnChangePin.style.display = "none";
+          setStatus("Sincronização: desconectada");
+          show(loginOverlay,true);
+          return;
+        }
+
+        userUid = user.uid;
+        show(loginOverlay,false);
+        startSync();
+
+        // se voltamos de reauth para reset PIN
+        if(sessionStorage.getItem(PENDING_PIN_RESET)==="1"){
+          sessionStorage.removeItem(PENDING_PIN_RESET);
+          localStorage.removeItem(PIN_HASH_KEY);
+          unlocked = false;
+          show(pinOverlay,true);
+          pinMode("set");
+          return;
+        }
+
+        await requirePin();
+        // vai desbloquear depois que PIN der OK
+        if(localStorage.getItem(PIN_HASH_KEY) && unlocked){
+          unlockUI();
+        }
       });
+    }
 
-      desenharPizza(porCatOrdenado);
-
-      box.innerHTML = porCatOrdenado.map((c) => {
-        const pct = total
+    init();
+  </script>
+</body>
+</html>
