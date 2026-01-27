@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gastos - Assistente Pessoal</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -12,76 +12,79 @@
       min-height: 100vh; padding: 20px;
     }
     .container { max-width: 600px; margin: 0 auto; }
-    h1 { color: white; text-align: center; margin-bottom: 30px; font-size: 24px; }
+    h1 { color: white; text-align: center; margin-bottom: 16px; font-size: 24px; }
     .tabs { display: flex; background: rgba(255,255,255,0.95); border-radius: 15px; margin-bottom: 20px; overflow: hidden; }
     .tab { flex: 1; padding: 15px; background: none; border: none; font-size: 16px; cursor: pointer; transition: all 0.3s; }
     .tab.active { background: #007AFF; color: white; }
     .tab-content { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; }
     .tab-content.active { display: block; }
-    .form-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; margin-bottom: 8px; font-weight: 800; color: #333; }
     input, select { width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 16px; }
     input:focus, select:focus { outline: none; border-color: #007AFF; }
-    button { background: #007AFF; color: white; border: none; padding: 15px 25px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.3s; }
+    button { background: #007AFF; color: white; border: none; padding: 15px 18px; border-radius: 10px; font-size: 16px; font-weight: 900; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.3s; }
     button:hover { background: #0056cc; }
+    button.secondary { background: #2c2c2e; }
+    button.secondary:hover { background: #111; }
     button.danger { background: #FF3B30; }
     button.danger:hover { background: #D32F2F; }
     .list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     .list-info { flex: 1; }
     .list-date { font-size: 14px; color: #666; }
-    .list-amount { font-size: 18px; font-weight: 700; color: #333; }
-    .summary { background: #F2F2F7; padding: 20px; border-radius: 15px; text-align: center; margin: 20px 0; }
-    .total-amount { font-size: 28px; font-weight: 800; color: #FF3B30; }
-    .filter-group { display: flex; gap: 10px; margin-bottom: 20px; }
+    .list-amount { font-size: 18px; font-weight: 900; color: #333; }
+    .summary { background: #F2F2F7; padding: 18px; border-radius: 15px; text-align: center; margin: 16px 0; }
+    .total-amount { font-size: 28px; font-weight: 900; color: #FF3B30; }
+    .filter-group { display: flex; gap: 10px; margin-bottom: 16px; }
     .filter-group select { flex: 1; }
-    .empty-state { text-align: center; color: #666; padding: 40px 20px; }
-    .export-btns { display: flex; gap: 10px; margin-top: 20px; }
-    .export-btns button { flex: 1; padding: 12px; }
-    canvas { display: block; margin: 20px auto; border-radius: 20px; }
+    .empty-state { text-align: center; color: #666; padding: 34px 16px; }
+    .export-btns { display: flex; gap: 10px; margin-top: 16px; }
+    .export-btns button { flex: 1; padding: 12px; margin-top: 0; }
+    canvas { display: block; margin: 16px auto; border-radius: 20px; }
     @media print { body { background: white; } .tab-content:not(.active) { display: none !important; } }
 
-    /* ===== Relatório detalhado ===== */
-    .legend {
-      background: #fff;
-      border-radius: 14px;
-      padding: 14px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
-    }
+    .legend { background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+    .legend-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #eee; }
     .legend-item:last-child { border-bottom: none; }
     .legend-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
     .swatch { width: 12px; height: 12px; border-radius: 4px; flex: 0 0 12px; }
-    .legend-title { font-weight: 700; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .legend-title { font-weight: 900; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .legend-sub { font-size: 12px; color: #666; }
-    .legend-right { text-align: right; flex: 0 0 auto; }
-    .legend-value { font-weight: 800; color: #333; }
+    .legend-right { text-align: right; }
+    .legend-value { font-weight: 900; color: #333; }
     .legend-pct { font-size: 12px; color: #666; }
 
-    .table-wrap {
-      margin-top: 14px;
-      overflow: auto;
-      border-radius: 14px;
-      background: #fff;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    }
+    .table-wrap { margin-top: 14px; overflow: auto; border-radius: 14px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
     table.report { width: 100%; border-collapse: collapse; font-size: 14px; }
-    table.report th, table.report td { padding: 10px 12px; border-bottom: 1px solid #eee; text-align: left; white-space: nowrap; }
-    table.report th { background: #f6f7fb; font-weight: 800; color: #333; }
+    table.report th, table.report td { padding: 10px 12px; border-bottom: 1px solid #eee; white-space: nowrap; }
+    table.report th { background: #f6f7fb; font-weight: 900; color: #333; text-align: left; }
     table.report td:last-child, table.report th:last-child { text-align: right; }
 
     .small-muted { font-size: 12px; color: #666; margin-top: 10px; text-align: center; }
+
+    .statusbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 10px; color:#fff; font-size: 12px; }
+    .pill { display:inline-block; font-size: 12px; padding: 6px 10px; border-radius: 999px; background:#eef2ff; color:#273c75; font-weight: 900; }
+    .statusbar a { color:#fff; text-decoration: underline; cursor:pointer; }
+
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 9999; }
+    .overlay.show { display: flex; }
+    .card { width: 100%; max-width: 520px; background: rgba(255,255,255,0.98); border-radius: 18px; padding: 18px; box-shadow: 0 12px 30px rgba(0,0,0,0.25); }
+    .card h2 { font-size: 18px; margin-bottom: 10px; color: #111; }
+    .row { display: flex; gap: 10px; }
+    .row > * { flex: 1; }
+    .note { font-size: 12px; color: #555; margin-top: 8px; line-height: 1.35; }
+    .top-actions { display: flex; gap: 10px; margin-top: 10px; }
+    .top-actions button { flex: 1; margin-top: 0; }
   </style>
 </head>
+
 <body>
   <div class="container">
-    <h1>💰 Gastos</h1>
+    <div class="statusbar">
+      <div><span class="pill" id="syncStatus">Sincronização: conectando...</span></div>
+      <div><a id="btnLogout" style="display:none;">Sair</a></div>
+    </div>
+
+    <h1>Gastos</h1>
 
     <div class="tabs">
       <button class="tab active" onclick="showTab('novo', event)">Novo gasto</button>
@@ -89,48 +92,46 @@
       <button class="tab" onclick="showTab('relatorio', event)">Relatório</button>
     </div>
 
-    <!-- NOVO GASTO -->
     <div id="novo" class="tab-content active">
       <div class="form-group">
         <label>Data</label>
-        <input type="date" id="data">
+        <input type="date" id="data" />
       </div>
       <div class="form-group">
         <label>Categoria</label>
         <select id="categoria">
           <option value="">Selecione...</option>
-          <option value="Alimentação">🍽️ Alimentação</option>
-          <option value="Transporte">🚗 Transporte</option>
-          <option value="Mercado">🛒 Mercado</option>
-          <option value="Contas">💡 Contas</option>
-          <option value="Lazer">🎉 Lazer</option>
-          <option value="Compra na internet">🛍️ Compra na internet</option>
-          <option value="Jogos">🎮 Jogos</option>
-          <option value="Outros">📦 Outros</option>
+          <option value="Alimentação">Alimentação</option>
+          <option value="Transporte">Transporte</option>
+          <option value="Mercado">Mercado</option>
+          <option value="Contas">Contas</option>
+          <option value="Lazer">Lazer</option>
+          <option value="Compra na internet">Compra na internet</option>
+          <option value="Jogos">Jogos</option>
+          <option value="Outros">Outros</option>
         </select>
       </div>
       <div class="form-group">
         <label>Descrição</label>
-        <input type="text" id="descricao" placeholder="Ex: Café, Uber, etc.">
+        <input type="text" id="descricao" placeholder="Ex: Café, Uber, etc." />
       </div>
       <div class="form-group">
         <label>Forma de pagamento</label>
         <select id="forma">
           <option value="">Selecione...</option>
-          <option value="Pix">💸 Pix</option>
-          <option value="Crédito">💳 Crédito</option>
-          <option value="Débito">💳 Débito</option>
-          <option value="Espécie">💵 Espécie</option>
+          <option value="Pix">Pix</option>
+          <option value="Crédito">Crédito</option>
+          <option value="Débito">Débito</option>
+          <option value="Espécie">Espécie</option>
         </select>
       </div>
       <div class="form-group">
         <label>Valor (R$)</label>
-        <input type="number" id="valor" step="0.01" placeholder="0.00">
+        <input type="number" id="valor" step="0.01" placeholder="0.00" />
       </div>
-      <button onclick="salvarGasto()">💾 Salvar</button>
+      <button onclick="salvarGasto()">Salvar</button>
     </div>
 
-    <!-- LISTA -->
     <div id="lista" class="tab-content">
       <div class="filter-group">
         <select id="filtroMes" onchange="filtrarGastos()">
@@ -140,19 +141,20 @@
           <option value="">Todas categorias</option>
         </select>
       </div>
+
       <div id="summaryLista" class="summary" style="display:none;">
         <div>Total selecionado</div>
         <div id="totalLista" class="total-amount">R$ 0,00</div>
       </div>
+
       <div id="listaGastos"></div>
+
       <div id="emptyLista" class="empty-state">
-        <div>📝</div>
         <div>Nenhum gasto ainda</div>
-        <div>Vá em "Novo gasto" para começar!</div>
+        <div>Vá em "Novo gasto" para começar.</div>
       </div>
     </div>
 
-    <!-- RELATÓRIO -->
     <div id="relatorio" class="tab-content">
       <div class="filter-group">
         <select id="relatorioMes" onchange="gerarRelatorio()">
@@ -166,18 +168,15 @@
       </div>
 
       <canvas id="graficoCategorias" width="320" height="320" style="display:none;"></canvas>
-
       <div id="legendaCategorias" class="legend" style="display:none;"></div>
-
       <div id="tabelaCategorias" class="table-wrap" style="display:none;"></div>
 
       <div class="export-btns" id="exportBtns" style="display:none;">
-        <button onclick="exportarCSV()">📊 CSV (Excel)</button>
-        <button onclick="imprimirRelatorio()">🖨️ PDF</button>
+        <button onclick="exportarCSV()">CSV (Excel)</button>
+        <button onclick="imprimirRelatorio()">PDF</button>
       </div>
 
       <div id="emptyRelatorio" class="empty-state">
-        <div>📈</div>
         <div>Selecione um mês para relatório</div>
       </div>
 
@@ -185,45 +184,293 @@
     </div>
   </div>
 
-  <script>
-    let gastos = JSON.parse(localStorage.getItem('gastos')) || [];
+  <!-- Login -->
+  <div class="overlay" id="loginOverlay">
+    <div class="card">
+      <h2>Entrar para sincronizar</h2>
 
-    const CATEGORIAS_PADRAO = [
-      "Alimentação", "Transporte", "Mercado", "Contas", "Lazer",
-      "Compra na internet", "Jogos", "Outros"
-    ];
+      <div class="top-actions">
+        <button id="btnGoogle">Entrar com Google</button>
+        <button class="secondary" id="btnMostrarEmail">Email/senha</button>
+      </div>
 
-    const PALETA = [
-      '#FF6384','#36A2EB','#FFCE56','#4BC0C0',
-      '#9966FF','#FF9F40','#2ecc71','#e74c3c',
-      '#3498db','#9b59b6'
-    ];
+      <div id="emailBox" style="display:none; margin-top:12px;">
+        <div class="form-group">
+          <label>Email</label>
+          <input id="authEmail" type="email" placeholder="seuemail@exemplo.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input id="authPass" type="password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div class="top-actions">
+          <button id="btnEntrar">Entrar</button>
+          <button class="secondary" id="btnCriarConta">Criar conta</button>
+        </div>
+      </div>
 
-    // Data de hoje
-    const hoje = new Date();
-    const dataHoje = hoje.toISOString().split('T')[0];
-    document.getElementById('data').value = dataHoje;
+      <div class="note" id="authMsg" style="color:#c0392b; font-weight:900;"></div>
+      <div class="note">Após entrar, você cria/digita um PIN para travar este aparelho. Os gastos ficam na nuvem.</div>
+    </div>
+  </div>
 
-    function showTab(nome, ev) {
-      // Esconder todas
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  <!-- PIN -->
+  <div class="overlay" id="pinOverlay">
+    <div class="card">
+      <h2>PIN deste aparelho</h2>
 
-      // Mostrar selecionada
-      document.getElementById(nome).classList.add('active');
-      if (ev && ev.target) ev.target.classList.add('active');
+      <div class="form-group" id="pinSetGroup" style="display:none;">
+        <label>Crie um PIN (4 a 8 dígitos)</label>
+        <input id="pinNovo" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 1234">
+        <label style="margin-top:10px;">Repita o PIN</label>
+        <input id="pinNovo2" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 1234">
+        <button id="btnSalvarPin">Salvar PIN</button>
+      </div>
 
-      // Atualizar telas
-      if (nome === 'lista') atualizarLista();
-      if (nome === 'relatorio') gerarRelatorio();
+      <div class="form-group" id="pinEnterGroup" style="display:none;">
+        <label>Digite seu PIN</label>
+        <input id="pinDigitado" inputmode="numeric" pattern="[0-9]*" placeholder="••••">
+        <button id="btnDesbloquear">Desbloquear</button>
+      </div>
+
+      <div class="top-actions" style="margin-top:12px;">
+        <button class="secondary" id="btnTrocarPin">Trocar PIN</button>
+        <button class="danger" id="btnLimparPin">Esqueci o PIN (limpar)</button>
+      </div>
+
+      <div class="note" id="pinMsg" style="color:#c0392b; font-weight:900;"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signInWithPopup,
+      signInWithRedirect,
+      getRedirectResult,
+      GoogleAuthProvider,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      addDoc,
+      deleteDoc,
+      onSnapshot,
+      query,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // Seu config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAIKbBCn96YbinrRHkDcpvZ4OY7j9Z_ES8",
+      authDomain: "gastos-pessoais-a716a.firebaseapp.com",
+      projectId: "gastos-pessoais-a716a",
+      storageBucket: "gastos-pessoais-a716a.firebasestorage.app",
+      messagingSenderId: "928424495392",
+      appId: "1:928424495392:web:2d32deb9960d765ab8af45"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let gastos = [];
+    let userUid = null;
+    let unsub = null;
+    let appUnlocked = false;
+
+    const PALETA = ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#2ecc71','#e74c3c','#3498db','#9b59b6'];
+
+    const syncStatus = document.getElementById('syncStatus');
+    const btnLogout = document.getElementById('btnLogout');
+    const authMsg = document.getElementById('authMsg');
+
+    const PIN_HASH_KEY = 'pinHash_v1';
+
+    function setStatus(t) { syncStatus.textContent = t; }
+
+    function showOverlay(id, show) {
+      document.getElementById(id).classList.toggle('show', !!show);
     }
 
-    function salvarGasto() {
-      const data = document.getElementById('data').value;
+    document.getElementById('data').value = new Date().toISOString().split('T')[0];
 
+    // Navegação
+    window.showTab = function(nome, ev) {
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(nome).classList.add('active');
+      if (ev && ev.target) ev.target.classList.add('active');
+      if (nome === 'lista') atualizarLista();
+      if (nome === 'relatorio') gerarRelatorio();
+    };
+
+    // PIN (hash SHA-256)
+    async function sha256Hex(str) {
+      const enc = new TextEncoder().encode(str);
+      const buf = await crypto.subtle.digest('SHA-256', enc);
+      return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function pinUiMode(mode) {
+      document.getElementById('pinSetGroup').style.display = (mode === 'set') ? 'block' : 'none';
+      document.getElementById('pinEnterGroup').style.display = (mode === 'enter') ? 'block' : 'none';
+      document.getElementById('pinMsg').textContent = '';
+      document.getElementById('pinNovo').value = '';
+      document.getElementById('pinNovo2').value = '';
+      document.getElementById('pinDigitado').value = '';
+    }
+
+    async function requirePinUnlock() {
+      const hash = localStorage.getItem(PIN_HASH_KEY);
+      showOverlay('pinOverlay', true);
+      pinUiMode(hash ? 'enter' : 'set');
+    }
+
+    async function unlockIfReady() {
+      if (userUid && appUnlocked) {
+        showOverlay('loginOverlay', false);
+        showOverlay('pinOverlay', false);
+        btnLogout.style.display = 'inline';
+        setStatus('Sincronização: ativa');
+        atualizarTudo();
+      }
+    }
+
+    document.getElementById('btnSalvarPin').addEventListener('click', async () => {
+      const p1 = (document.getElementById('pinNovo').value || '').trim();
+      const p2 = (document.getElementById('pinNovo2').value || '').trim();
+      const msg = document.getElementById('pinMsg');
+      if (!/^\d{4,8}$/.test(p1)) { msg.textContent = 'PIN precisa ter 4 a 8 dígitos.'; return; }
+      if (p1 !== p2) { msg.textContent = 'Os PINs não conferem.'; return; }
+      localStorage.setItem(PIN_HASH_KEY, await sha256Hex(p1));
+      appUnlocked = true;
+      await unlockIfReady();
+    });
+
+    document.getElementById('btnDesbloquear').addEventListener('click', async () => {
+      const pin = (document.getElementById('pinDigitado').value || '').trim();
+      const msg = document.getElementById('pinMsg');
+      const hash = localStorage.getItem(PIN_HASH_KEY);
+      if (!/^\d{4,8}$/.test(pin)) { msg.textContent = 'PIN inválido.'; return; }
+      if ((await sha256Hex(pin)) !== hash) { msg.textContent = 'PIN incorreto.'; return; }
+      appUnlocked = true;
+      await unlockIfReady();
+    });
+
+    document.getElementById('btnTrocarPin').addEventListener('click', () => pinUiMode('set'));
+    document.getElementById('btnLimparPin').addEventListener('click', () => {
+      if (!confirm('Remover o PIN deste aparelho?')) return;
+      localStorage.removeItem(PIN_HASH_KEY);
+      appUnlocked = false;
+      pinUiMode('set');
+    });
+
+    // Login UI
+    document.getElementById('btnMostrarEmail').addEventListener('click', () => {
+      const box = document.getElementById('emailBox');
+      box.style.display = (box.style.display === 'none') ? 'block' : 'none';
+    });
+
+    function showAuthError(e) {
+      authMsg.textContent = (e && e.message) ? e.message : 'Erro ao autenticar.';
+    }
+
+    document.getElementById('btnEntrar').addEventListener('click', async () => {
+      authMsg.textContent = '';
+      const email = (document.getElementById('authEmail').value || '').trim();
+      const pass = (document.getElementById('authPass').value || '').trim();
+      try { await signInWithEmailAndPassword(auth, email, pass); }
+      catch (e) { showAuthError(e); }
+    });
+
+    document.getElementById('btnCriarConta').addEventListener('click', async () => {
+      authMsg.textContent = '';
+      const email = (document.getElementById('authEmail').value || '').trim();
+      const pass = (document.getElementById('authPass').value || '').trim();
+      try { await createUserWithEmailAndPassword(auth, email, pass); }
+      catch (e) { showAuthError(e); }
+    });
+
+    document.getElementById('btnGoogle').addEventListener('click', async () => {
+      authMsg.textContent = '';
+      try {
+        const provider = new GoogleAuthProvider();
+        // Tenta popup primeiro
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        // Se popup bloquear, vai de redirect (mais estável no mobile) [web:218][web:216]
+        try {
+          const provider = new GoogleAuthProvider();
+          await signInWithRedirect(auth, provider);
+        } catch (e2) {
+          showAuthError(e2);
+        }
+      }
+    });
+
+    btnLogout.addEventListener('click', async () => {
+      if (!confirm('Sair e bloquear o app neste aparelho?')) return;
+      appUnlocked = false;
+      if (unsub) { unsub(); unsub = null; }
+      await signOut(auth);
+      btnLogout.style.display = 'none';
+      setStatus('Sincronização: desconectada');
+      showOverlay('loginOverlay', true);
+    });
+
+    // Firestore refs
+    function expensesColRef() {
+      return collection(db, `users/${userUid}/expenses`);
+    }
+
+    function startRealtimeSync() {
+      if (!userUid) return;
+      if (unsub) { unsub(); unsub = null; }
+      const q = query(expensesColRef(), orderBy('data', 'desc'));
+      unsub = onSnapshot(q, (snap) => {
+        gastos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (appUnlocked) atualizarTudo();
+      }, (err) => {
+        console.error(err);
+        setStatus('Sincronização: erro');
+      });
+    }
+
+    // Estado Auth (inclui retorno do redirect)
+    async function initAuthFlow() {
+      try { await getRedirectResult(auth); } catch (_) {}
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          userUid = null;
+          if (unsub) { unsub(); unsub = null; }
+          setStatus('Sincronização: desconectada');
+          showOverlay('loginOverlay', true);
+          return;
+        }
+        userUid = user.uid;
+        setStatus('Sincronização: preparando...');
+        showOverlay('loginOverlay', false);
+        startRealtimeSync();
+        await requirePinUnlock();
+        await unlockIfReady();
+      });
+    }
+
+    // CRUD
+    window.salvarGasto = async function() {
+      if (!userUid) { alert('Faça login para salvar.'); return; }
+      if (!appUnlocked) { alert('Desbloqueie com PIN.'); return; }
+
+      const data = document.getElementById('data').value;
       const novoGasto = {
-        id: Date.now(),
-        data: data,
+        data,
         categoria: document.getElementById('categoria').value,
         descricao: document.getElementById('descricao').value,
         forma: document.getElementById('forma').value,
@@ -232,30 +479,25 @@
       };
 
       if (!novoGasto.categoria || novoGasto.valor <= 0) {
-        alert('❌ Categoria e valor são obrigatórios!');
+        alert('Categoria e valor são obrigatórios.');
         return;
       }
 
-      gastos.push(novoGasto);
-      localStorage.setItem('gastos', JSON.stringify(gastos));
+      await addDoc(expensesColRef(), novoGasto);
 
-      // Limpar form
       document.getElementById('descricao').value = '';
       document.getElementById('valor').value = '';
       document.getElementById('forma').value = '';
+    };
 
-      alert('✅ Salvo!');
-      atualizarTudo();
-    }
+    window.excluirGasto = async function(id) {
+      if (!userUid) return;
+      if (!appUnlocked) { alert('Desbloqueie com PIN.'); return; }
+      if (!confirm('Excluir este gasto?')) return;
+      await deleteDoc(doc(db, `users/${userUid}/expenses/${id}`));
+    };
 
-    function excluirGasto(id) {
-      if (confirm('🗑️ Excluir este gasto?')) {
-        gastos = gastos.filter(g => g.id != id);
-        localStorage.setItem('gastos', JSON.stringify(gastos));
-        atualizarTudo();
-      }
-    }
-
+    // Lista + Relatório
     function atualizarLista() {
       const listaEl = document.getElementById('listaGastos');
       const emptyEl = document.getElementById('emptyLista');
@@ -264,15 +506,13 @@
       const filtroMes = document.getElementById('filtroMes').value;
       const filtroCat = document.getElementById('filtroCat').value;
 
-      let gastosVisiveis = gastos
-        .filter(g => {
-          const mesOk = !filtroMes || g.anoMes === filtroMes;
-          const catOk = !filtroCat || g.categoria === filtroCat;
-          return mesOk && catOk;
-        })
-        .sort((a, b) => new Date(b.data) - new Date(a.data));
+      const visiveis = gastos.filter(g => {
+        const mesOk = !filtroMes || g.anoMes === filtroMes;
+        const catOk = !filtroCat || g.categoria === filtroCat;
+        return mesOk && catOk;
+      }).sort((a,b) => new Date(b.data) - new Date(a.data));
 
-      if (gastosVisiveis.length === 0) {
+      if (visiveis.length === 0) {
         listaEl.innerHTML = '';
         emptyEl.style.display = 'block';
         summaryEl.style.display = 'none';
@@ -281,21 +521,23 @@
 
       emptyEl.style.display = 'none';
       summaryEl.style.display = 'block';
-      document.getElementById('totalLista').textContent = formatarMoeda(somaGastos(gastosVisiveis));
+      document.getElementById('totalLista').textContent = formatarMoeda(somaGastos(visiveis));
 
-      listaEl.innerHTML = gastosVisiveis.map(g => `
+      listaEl.innerHTML = visiveis.map(g => `
         <div class="list-item">
           <div class="list-info">
-            <div style="font-weight: 600;">${escapeHtml(g.descricao || g.categoria)}</div>
+            <div style="font-weight: 900;">${escapeHtml(g.descricao || g.categoria)}</div>
             <div class="list-date">${formatarData(g.data)} • ${escapeHtml(g.categoria)} • ${escapeHtml(g.forma || '')}</div>
           </div>
-          <div style="display: flex; gap: 10px;">
-            <div class="list-amount">${formatarMoeda(g.valor)}</div>
-            <button class="danger" onclick="excluirGasto(${g.id})" style="width: auto; padding: 8px 12px;">🗑️</button>
+          <div style="display:flex; gap:10px;">
+            <div class="list-amount">${formatarMoeda(Number(g.valor)||0)}</div>
+            <button class="danger" onclick="excluirGasto('${g.id}')" style="width:auto; padding:8px 12px;">🗑️</button>
           </div>
         </div>
       `).join('');
     }
+
+    window.filtrarGastos = () => atualizarLista();
 
     function gerarRelatorio() {
       const mesSelecionado = document.getElementById('relatorioMes').value;
@@ -329,7 +571,7 @@
         exportBtns.style.display = 'flex';
         desenharGrafico(gastosMes);
         montarResumoCategorias(gastosMes, totalMes);
-        info.textContent = `Mês selecionado: ${formatarMes(mesSelecionado)} • Lançamentos: ${gastosMes.length}`;
+        info.textContent = `Mês: ${formatarMes(mesSelecionado)} • Lançamentos: ${gastosMes.length}`;
         info.style.display = 'block';
       } else {
         canvas.style.display = 'none';
@@ -340,29 +582,28 @@
       }
     }
 
+    window.gerarRelatorio = gerarRelatorio;
+
     function desenharGrafico(gastosMes) {
       const canvas = document.getElementById('graficoCategorias');
       const ctx = canvas.getContext('2d');
-      canvas.width = 320;
-      canvas.height = 320;
+      canvas.width = 320; canvas.height = 320;
 
       const porCat = {};
-      gastosMes.forEach(g => (porCat[g.categoria] = (porCat[g.categoria] || 0) + g.valor));
+      gastosMes.forEach(g => porCat[g.categoria] = (porCat[g.categoria] || 0) + (Number(g.valor)||0));
 
-      const entries = Object.entries(porCat).sort((a, b) => b[1] - a[1]); // maior -> menor
+      const entries = Object.entries(porCat).sort((a,b) => b[1] - a[1]);
       const valores = entries.map(e => e[1]);
 
-      const total = valores.reduce((a, b) => a + b, 0);
-      let angulo = -Math.PI / 2;
+      const total = valores.reduce((a,b) => a+b, 0);
+      let angulo = -Math.PI/2;
+      ctx.clearRect(0,0,320,320);
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Pizza
-      valores.forEach((v, i) => {
-        const fatia = (v / total) * 2 * Math.PI;
+      valores.forEach((v,i) => {
+        const fatia = (v/total) * 2*Math.PI;
         ctx.beginPath();
-        ctx.arc(160, 160, 120, angulo, angulo + fatia);
-        ctx.lineTo(160, 160);
+        ctx.arc(160,160,120,angulo,angulo+fatia);
+        ctx.lineTo(160,160);
         ctx.closePath();
         ctx.fillStyle = PALETA[i % PALETA.length];
         ctx.fill();
@@ -372,24 +613,22 @@
         angulo += fatia;
       });
 
-      // Labels (percentual) – evita poluir com fatias pequenas
-      angulo = -Math.PI / 2;
+      // percentuais nas fatias maiores
+      angulo = -Math.PI/2;
       ctx.fillStyle = '#111';
-      ctx.font = '700 12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+      ctx.font = '900 12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
 
-      valores.forEach((v, i) => {
-        const fatia = (v / total) * 2 * Math.PI;
-        const meio = angulo + fatia / 2;
-        const pct = Math.round((v / total) * 100);
-
+      valores.forEach((v) => {
+        const fatia = (v/total) * 2*Math.PI;
+        const meio = angulo + fatia/2;
+        const pct = Math.round((v/total)*100);
         if (pct >= 6) {
-          const x = 160 + Math.cos(meio) * 85;
-          const y = 160 + Math.sin(meio) * 85;
+          const x = 160 + Math.cos(meio)*85;
+          const y = 160 + Math.sin(meio)*85;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(`${pct}%`, x, y);
         }
-
         angulo += fatia;
       });
 
@@ -401,29 +640,24 @@
       const tabela = document.getElementById('tabelaCategorias');
 
       const porCat = {};
-      const stats = {}; // {cat: {qtd, total, max, min}}
-
+      const stats = {};
       gastosMes.forEach(g => {
-        porCat[g.categoria] = (porCat[g.categoria] || 0) + g.valor;
-
-        if (!stats[g.categoria]) {
-          stats[g.categoria] = { qtd: 0, total: 0, max: g.valor, min: g.valor };
-        }
+        const v = Number(g.valor)||0;
+        porCat[g.categoria] = (porCat[g.categoria] || 0) + v;
+        if (!stats[g.categoria]) stats[g.categoria] = { qtd:0, max:v, min:v, total:0 };
         stats[g.categoria].qtd += 1;
-        stats[g.categoria].total += g.valor;
-        stats[g.categoria].max = Math.max(stats[g.categoria].max, g.valor);
-        stats[g.categoria].min = Math.min(stats[g.categoria].min, g.valor);
+        stats[g.categoria].total += v;
+        stats[g.categoria].max = Math.max(stats[g.categoria].max, v);
+        stats[g.categoria].min = Math.min(stats[g.categoria].min, v);
       });
 
-      const entries = Object.entries(porCat).sort((a, b) => b[1] - a[1]);
+      const entries = Object.entries(porCat).sort((a,b) => b[1] - a[1]);
 
-      // Legenda (categoria + valor + %)
-      legenda.innerHTML = entries.map(([cat, val], idx) => {
-        const pct = totalMes > 0 ? (val / totalMes) * 100 : 0;
+      legenda.innerHTML = entries.map(([cat,val], idx) => {
+        const pct = totalMes > 0 ? (val/totalMes)*100 : 0;
         const cor = PALETA[idx % PALETA.length];
         const qtd = stats[cat].qtd;
         const media = val / qtd;
-
         return `
           <div class="legend-item">
             <div class="legend-left">
@@ -440,24 +674,19 @@
           </div>
         `;
       }).join('');
-
       legenda.style.display = 'block';
 
-      // Tabela detalhada por categoria
-      const linhas = entries.map(([cat, val]) => {
-        const pct = totalMes > 0 ? (val / totalMes) * 100 : 0;
+      const linhas = entries.map(([cat,val]) => {
+        const pct = totalMes > 0 ? (val/totalMes)*100 : 0;
         const qtd = stats[cat].qtd;
         const media = val / qtd;
-        const max = stats[cat].max;
-        const min = stats[cat].min;
-
         return `
           <tr>
             <td>${escapeHtml(cat)}</td>
             <td>${qtd}</td>
             <td>${formatarMoeda(media)}</td>
-            <td>${formatarMoeda(min)}</td>
-            <td>${formatarMoeda(max)}</td>
+            <td>${formatarMoeda(stats[cat].min)}</td>
+            <td>${formatarMoeda(stats[cat].max)}</td>
             <td>${pct.toFixed(1)}%</td>
             <td>${formatarMoeda(val)}</td>
           </tr>
@@ -467,45 +696,57 @@
       tabela.innerHTML = `
         <table class="report">
           <thead>
-            <tr>
-              <th>Categoria</th>
-              <th>Qtd</th>
-              <th>Média</th>
-              <th>Menor</th>
-              <th>Maior</th>
-              <th>%</th>
-              <th>Total</th>
-            </tr>
+            <tr><th>Categoria</th><th>Qtd</th><th>Média</th><th>Menor</th><th>Maior</th><th>%</th><th>Total</th></tr>
           </thead>
-          <tbody>
-            ${linhas}
-          </tbody>
+          <tbody>${linhas}</tbody>
         </table>
       `;
-
       tabela.style.display = 'block';
     }
 
+    window.exportarCSV = function() {
+      const mes = document.getElementById('relatorioMes').value;
+      const gastosMes = gastos.filter(g => g.anoMes === mes);
+
+      // Excel: BOM UTF-8 + sep=; costuma abrir correto (acentos/colunas). [web:64][web:56]
+      const BOM = '\ufeff';
+      const SEP = ';';
+      const EOL = '\r\n';
+
+      const total = somaGastos(gastosMes);
+
+      const esc = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`;
+      const num = (n) => String(Number(n || 0).toFixed(2)).replace('.', ',');
+
+      let csv = BOM + `sep=${SEP}` + EOL;
+      csv += `Relatório${SEP}${esc(formatarMes(mes))}${EOL}${EOL}`;
+      csv += `Data${SEP}Categoria${SEP}Descrição${SEP}Forma${SEP}Valor${EOL}`;
+
+      gastosMes.sort((a,b) => new Date(a.data) - new Date(b.data)).forEach(g => {
+        csv += `${esc(formatarData(g.data))}${SEP}${esc(g.categoria)}${SEP}${esc(g.descricao)}${SEP}${esc(g.forma)}${SEP}${num(g.valor)}${EOL}`;
+      });
+
+      csv += `${EOL}Total do mês${SEP}${SEP}${SEP}${SEP}${num(total)}${EOL}`;
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `Relatorio_${mes}.csv`;
+      a.click();
+    };
+
+    window.imprimirRelatorio = () => window.print();
+
     function popularSelects() {
-      const mesesUnicos = [...new Set(gastos.map(g => g.anoMes))].sort().reverse();
-
-      // Meses (Lista)
+      const mesesUnicos = [...new Set(gastos.map(g => g.anoMes).filter(Boolean))].sort().reverse();
       document.getElementById('filtroMes').innerHTML =
-        '<option value="">Todos os meses</option>' +
-        mesesUnicos.map(m => `<option value="${m}">${formatarMes(m)}</option>`).join('');
-
-      // Meses (Relatório)
+        '<option value="">Todos os meses</option>' + mesesUnicos.map(m => `<option value="${m}">${formatarMes(m)}</option>`).join('');
       document.getElementById('relatorioMes').innerHTML =
-        '<option value="">Selecione um mês</option>' +
-        mesesUnicos.map(m => `<option value="${m}">${formatarMes(m)}</option>`).join('');
+        '<option value="">Selecione um mês</option>' + mesesUnicos.map(m => `<option value="${m}">${formatarMes(m)}</option>`).join('');
 
-      // Categorias (Lista)
-      const catsEncontradas = [...new Set(gastos.map(g => g.categoria))];
-      const cats = (catsEncontradas.length ? catsEncontradas : CATEGORIAS_PADRAO).slice().sort((a,b) => a.localeCompare(b,'pt-BR'));
-
+      const cats = [...new Set(gastos.map(g => g.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
       document.getElementById('filtroCat').innerHTML =
-        '<option value="">Todas categorias</option>' +
-        cats.map(c => `<option value="${escapeHtmlAttr(c)}">${escapeHtml(c)}</option>`).join('');
+        '<option value="">Todas categorias</option>' + cats.map(c => `<option value="${escapeHtmlAttr(c)}">${escapeHtml(c)}</option>`).join('');
     }
 
     function atualizarTudo() {
@@ -514,119 +755,25 @@
       gerarRelatorio();
     }
 
-    function filtrarGastos() {
-      atualizarLista();
-    }
-
-    function exportarCSV() {
-      const mes = document.getElementById('relatorioMes').value;
-      const gastosMes = gastos.filter(g => g.anoMes === mes);
-
-      // BOM UTF-8 ajuda o Excel a entender acentos [web:56]
-      // "sep=;" indica o separador para o Excel [web:64][web:61]
-      const BOM = '\ufeff';
-      const SEP = ';';
-      const EOL = '\r\n';
-
-      const total = somaGastos(gastosMes);
-
-      // Resumo por categoria
-      const porCat = {};
-      const contCat = {};
-      gastosMes.forEach(g => {
-        porCat[g.categoria] = (porCat[g.categoria] || 0) + g.valor;
-        contCat[g.categoria] = (contCat[g.categoria] || 0) + 1;
-      });
-
-      const resumoOrdenado = Object.entries(porCat).sort((a, b) => b[1] - a[1]);
-
-      const nomeMes = formatarMes(mes);
-      const agora = new Date().toLocaleString('pt-BR');
-
-      const esc = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`;
-      const num = (n) => String(Number(n || 0).toFixed(2)).replace('.', ',');
-
-      let csv = '';
-      csv += BOM + `sep=${SEP}` + EOL;
-      csv += `Relatório de Gastos${SEP}${esc(nomeMes)}${EOL}`;
-      csv += `Gerado em${SEP}${esc(agora)}${EOL}`;
-      csv += EOL;
-
-      csv += `Resumo por categoria${EOL}`;
-      csv += `Categoria${SEP}Qtd lançamentos${SEP}Total${SEP}% do mês${EOL}`;
-      resumoOrdenado.forEach(([cat, val]) => {
-        const pct = total > 0 ? (val / total) * 100 : 0;
-        csv += `${esc(cat)}${SEP}${contCat[cat] || 0}${SEP}${num(val)}${SEP}${num(pct)}%${EOL}`;
-      });
-      csv += EOL;
-
-      csv += `Detalhamento${EOL}`;
-      csv += `Data${SEP}Categoria${SEP}Descrição${SEP}Forma${SEP}Valor${EOL}`;
-      gastosMes
-        .sort((a, b) => new Date(a.data) - new Date(b.data))
-        .forEach(g => {
-          csv += `${esc(formatarData(g.data))}${SEP}${esc(g.categoria)}${SEP}${esc(g.descricao)}${SEP}${esc(g.forma)}${SEP}${num(g.valor)}${EOL}`;
-        });
-
-      csv += EOL;
-      csv += `Total do mês${SEP}${SEP}${SEP}${SEP}${num(total)}${EOL}`;
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `Relatorio_${mes}.csv`;
-      link.click();
-    }
-
-    function imprimirRelatorio() {
-      window.print();
-    }
-
-    // ===== Utilitários =====
-    function formatarAnoMes(dataStr) {
-      // Evita problemas de fuso: pega direto do texto YYYY-MM-DD
-      if (!dataStr || dataStr.length < 7) return '';
-      return dataStr.slice(0, 7);
-    }
-
+    function somaGastos(arr) { return arr.reduce((t,g) => t + (Number(g.valor)||0), 0); }
+    function formatarAnoMes(dataStr) { return (dataStr && dataStr.length >= 7) ? dataStr.slice(0,7) : ''; }
     function formatarMes(anoMes) {
       if (!anoMes) return '';
       const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
       const [ano, mes] = anoMes.split('-');
-      const idx = Math.max(1, Math.min(12, parseInt(mes, 10))) - 1;
+      const idx = Math.max(1, Math.min(12, parseInt(mes,10))) - 1;
       return `${meses[idx]} ${ano}`;
     }
-
-    function formatarData(data) {
-      // data vem como YYYY-MM-DD
-      const d = new Date(data + 'T00:00:00');
-      return d.toLocaleDateString('pt-BR');
-    }
-
-    function formatarMoeda(valor) {
-      return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(valor);
-    }
-
-    function somaGastos(arr) {
-      return arr.reduce((t,g) => t + (Number(g.valor) || 0), 0);
-    }
-
+    function formatarData(data) { return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR'); }
+    function formatarMoeda(v) { return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v)||0); }
     function escapeHtml(str) {
-      return String(str ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+      return String(str ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
     }
+    function escapeHtmlAttr(str) { return escapeHtml(str); }
 
-    function escapeHtmlAttr(str) {
-      // mesmo escape (para usar em value="")
-      return escapeHtml(str);
-    }
-
-    // INICIALIZAR
-    atualizarTudo();
+    setStatus('Sincronização: desconectada');
+    showOverlay('loginOverlay', true);
+    initAuthFlow();
   </script>
 </body>
 </html>
