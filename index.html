@@ -306,13 +306,13 @@
         <button id="btnDesbloquear">Desbloquear</button>
       </div>
 
-      <!-- Trocar PIN removido do overlay por segurança -->
+      <!-- Trocar PIN removido do overlay -->
       <div class="top-actions" style="margin-top:12px;">
         <button class="danger" id="btnLimparPin">Esqueci o PIN</button>
       </div>
 
       <div class="note" id="pinMsg" style="color:#c0392b; font-weight:900;"></div>
-      <div class="note">O PIN é só para este aparelho. Para resetar, você precisa confirmar sua conta Google.</div>
+      <div class="note">Para resetar o PIN, você precisa confirmar sua conta Google.</div>
     </div>
   </div>
 
@@ -342,7 +342,7 @@
       orderBy
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // Firebase config (o seu)
+    // ===== Firebase config (o seu) =====
     const firebaseConfig = {
       apiKey: "AIzaSyAIKbBCn96YbinrRHkDcpvZ4OY7j9Z_ES8",
       authDomain: "gastos-pessoais-a716a.firebaseapp.com",
@@ -356,6 +356,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // ===== Estado =====
     let gastos = [];
     let userUid = null;
     let unsub = null;
@@ -365,11 +366,13 @@
     const PIN_HASH_KEY = 'pinHash_v1';
     const PENDING_PIN_RESET = 'pendingPinReset_v1';
 
+    // ===== Elementos =====
     const syncStatus = document.getElementById('syncStatus');
     const btnLogout = document.getElementById('btnLogout');
     const btnChangePin = document.getElementById('btnChangePin');
     const authMsg = document.getElementById('authMsg');
 
+    // ===== UI helpers =====
     function setStatus(t) { syncStatus.textContent = t; }
     function showOverlay(id, show) { document.getElementById(id).classList.toggle('show', !!show); }
 
@@ -386,7 +389,7 @@
       if (nome === 'relatorio') gerarRelatorio();
     };
 
-    // Helpers
+    // ===== Helpers =====
     function somaGastos(arr) { return arr.reduce((t,g) => t + (Number(g.valor) || 0), 0); }
     function formatarAnoMes(dataStr) { return (dataStr && dataStr.length >= 7) ? dataStr.slice(0,7) : ''; }
     function formatarMes(anoMes) {
@@ -396,7 +399,7 @@
       const idx = Math.max(1, Math.min(12, parseInt(mes,10))) - 1;
       return `${meses[idx]} ${ano}`;
     }
-    function formatarData(data) { return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR'); }
+    function formatarData(data) { return new Date(String(data) + 'T00:00:00').toLocaleDateString('pt-BR'); }
     function formatarMoeda(v) { return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v)||0); }
     function escapeHtml(str) {
       return String(str ?? '')
@@ -407,7 +410,7 @@
         .replaceAll("'","&#039;");
     }
 
-    // PIN (SHA-256)
+    // ===== PIN (SHA-256) =====
     async function sha256Hex(str) {
       const enc = new TextEncoder().encode(str);
       const buf = await crypto.subtle.digest('SHA-256', enc);
@@ -462,7 +465,7 @@
       await unlockIfReady();
     });
 
-    // Trocar PIN agora é só dentro do app (depois de destravar)
+    // Trocar PIN (somente dentro do app, após destravar)
     btnChangePin.addEventListener('click', async () => {
       const hash = localStorage.getItem(PIN_HASH_KEY);
       if (!hash) { alert('Nenhum PIN definido ainda.'); await requirePinUnlock(); return; }
@@ -489,7 +492,36 @@
       alert('PIN alterado com sucesso neste aparelho.');
     });
 
-    // Login UI
+    // Esqueci o PIN (com reautenticação Google)
+    document.getElementById('btnLimparPin').addEventListener('click', async () => {
+      const msg = document.getElementById('pinMsg');
+      msg.textContent = '';
+
+      if (!confirm('Para resetar o PIN, confirme sua conta Google. Continuar?')) return;
+
+      try {
+        const user = auth.currentUser;
+        if (!user) { msg.textContent = 'Você não está logado.'; return; }
+
+        const provider = new GoogleAuthProvider();
+
+        try {
+          await reauthenticateWithPopup(user, provider);
+          localStorage.removeItem(PIN_HASH_KEY);
+          appUnlocked = false;
+          pinUiMode('set');
+          msg.textContent = 'PIN removido. Crie um novo PIN.';
+        } catch (_) {
+          sessionStorage.setItem(PENDING_PIN_RESET, '1');
+          await reauthenticateWithRedirect(user, provider);
+        }
+      } catch (e) {
+        console.error(e);
+        msg.textContent = 'Não foi possível confirmar sua conta Google.';
+      }
+    });
+
+    // ===== Login UI =====
     document.getElementById('btnMostrarEmail').addEventListener('click', () => {
       const box = document.getElementById('emailBox');
       box.style.display = (box.style.display === 'none') ? 'block' : 'none';
@@ -537,37 +569,7 @@
       showOverlay('loginOverlay', true);
     });
 
-    // Esqueci o PIN (com reautenticação Google)
-    document.getElementById('btnLimparPin').addEventListener('click', async () => {
-      const msg = document.getElementById('pinMsg');
-      msg.textContent = '';
-
-      if (!confirm('Para resetar o PIN, confirme sua conta Google. Continuar?')) return;
-
-      try {
-        const user = auth.currentUser;
-        if (!user) { msg.textContent = 'Você não está logado.'; return; }
-
-        const provider = new GoogleAuthProvider();
-
-        try {
-          await reauthenticateWithPopup(user, provider);
-          localStorage.removeItem(PIN_HASH_KEY);
-          appUnlocked = false;
-          pinUiMode('set');
-          msg.textContent = 'PIN removido. Crie um novo PIN.';
-        } catch (_) {
-          // se popup bloquear, faz redirect e continua após o retorno
-          sessionStorage.setItem(PENDING_PIN_RESET, '1');
-          await reauthenticateWithRedirect(user, provider);
-        }
-      } catch (e) {
-        console.error(e);
-        msg.textContent = 'Não foi possível confirmar sua conta Google.';
-      }
-    });
-
-    // Firestore sync
+    // ===== Firestore sync =====
     function expensesColRef() {
       return collection(db, `users/${userUid}/expenses`);
     }
@@ -591,17 +593,6 @@
       // Consome resultados de redirects (login/reauth)
       try { await getRedirectResult(auth); } catch (_) {}
 
-      // Se voltamos de um redirect de reauth para reset de PIN
-      if (sessionStorage.getItem(PENDING_PIN_RESET) === '1' && auth.currentUser) {
-        sessionStorage.removeItem(PENDING_PIN_RESET);
-        localStorage.removeItem(PIN_HASH_KEY);
-        appUnlocked = false;
-        showOverlay('loginOverlay', false);
-        showOverlay('pinOverlay', true);
-        pinUiMode('set');
-        setStatus('Sincronização: ativa');
-      }
-
       onAuthStateChanged(auth, async (user) => {
         if (!user) {
           userUid = null;
@@ -617,14 +608,24 @@
         userUid = user.uid;
         setStatus('Sincronização: preparando...');
         showOverlay('loginOverlay', false);
-
         startRealtimeSync();
+
+        // Se voltamos de um redirect de reauth para reset de PIN
+        if (sessionStorage.getItem(PENDING_PIN_RESET) === '1') {
+          sessionStorage.removeItem(PENDING_PIN_RESET);
+          localStorage.removeItem(PIN_HASH_KEY);
+          appUnlocked = false;
+          showOverlay('pinOverlay', true);
+          pinUiMode('set');
+          return;
+        }
+
         await requirePinUnlock();
         await unlockIfReady();
       });
     }
 
-    // CRUD
+    // ===== CRUD =====
     window.salvarGasto = async function() {
       if (!userUid) { alert('Faça login para salvar.'); return; }
       if (!appUnlocked) { alert('Desbloqueie com PIN.'); return; }
@@ -663,7 +664,7 @@
       await deleteDoc(doc(db, `users/${userUid}/expenses/${id}`));
     };
 
-    // Lista
+    // ===== Lista =====
     function atualizarLista() {
       const listaEl = document.getElementById('listaGastos');
       const emptyEl = document.getElementById('emptyLista');
@@ -726,7 +727,7 @@
       gerarRelatorio();
     }
 
-    // Relatório
+    // ===== Relatório =====
     function desenharPizza(porCatOrdenado) {
       const canvas = document.getElementById('graficoCategorias');
       const ctx = canvas.getContext('2d');
@@ -739,7 +740,6 @@
 
       canvas.width = 320;
       canvas.height = 320;
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       let ang = -Math.PI / 2;
@@ -757,6 +757,7 @@
         ang += fatia;
       });
 
+      // percentuais nas fatias maiores
       ang = -Math.PI / 2;
       ctx.fillStyle = '#111';
       ctx.font = '900 12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
@@ -778,4 +779,35 @@
     }
 
     function montarDetalheCategorias(gastosMes, totalMes) {
-      const box = document
+      const box = document.getElementById('detalheCategorias');
+
+      const map = {};
+      gastosMes.forEach(g => {
+        const cat = g.categoria || 'Outros';
+        const v = Number(g.valor) || 0;
+
+        if (!map[cat]) map[cat] = { cat, total: 0, itens: [], qtd: 0, min: v, max: v };
+        map[cat].total += v;
+        map[cat].qtd += 1;
+        map[cat].min = Math.min(map[cat].min, v);
+        map[cat].max = Math.max(map[cat].max, v);
+
+        map[cat].itens.push({
+          data: g.data || '',
+          desc: (g.descricao && String(g.descricao).trim()) ? String(g.descricao).trim() : '(sem descrição)',
+          forma: g.forma || '',
+          valor: v
+        });
+      });
+
+      const porCatOrdenado = Object.values(map).sort((a,b) => b.total - a.total);
+
+      // Itens: por data (mais recente primeiro) e depois por valor
+      porCatOrdenado.forEach(c => {
+        c.itens.sort((a,b) => String(b.data).localeCompare(String(a.data)) || (b.valor - a.valor));
+      });
+
+      desenharPizza(porCatOrdenado);
+
+      box.innerHTML = porCatOrdenado.map((c) => {
+        const pct = total
