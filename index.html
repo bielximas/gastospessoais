@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gastos - Assistente Pessoal</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh; padding: 20px;
+    }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { color: white; text-align: center; margin-bottom: 30px; font-size: 24px; }
+    .tabs { display: flex; background: rgba(255,255,255,0.95); border-radius: 15px; margin-bottom: 20px; overflow: hidden; }
+    .tab { flex: 1; padding: 15px; background: none; border: none; font-size: 16px; cursor: pointer; transition: all 0.3s; }
+    .tab.active { background: #007AFF; color: white; }
+    .tab-content { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; }
+    .tab-content.active { display: block; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+    input, select { width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 16px; }
+    input:focus, select:focus { outline: none; border-color: #007AFF; }
+    button { background: #007AFF; color: white; border: none; padding: 15px 25px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.3s; }
+    button:hover { background: #0056cc; }
+    button.danger { background: #FF3B30; }
+    button.danger:hover { background: #D32F2F; }
+    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .list-info { flex: 1; }
+    .list-date { font-size: 14px; color: #666; }
+    .list-amount { font-size: 18px; font-weight: 700; color: #333; }
+    .summary { background: #F2F2F7; padding: 20px; border-radius: 15px; text-align: center; margin: 20px 0; }
+    .total-amount { font-size: 28px; font-weight: 800; color: #FF3B30; }
+    .filter-group { display: flex; gap: 10px; margin-bottom: 20px; }
+    .filter-group select { flex: 1; }
+    .empty-state { text-align: center; color: #666; padding: 40px 20px; }
+    .export-btns { display: flex; gap: 10px; margin-top: 20px; }
+    .export-btns button { flex: 1; padding: 12px; }
+    canvas { display: block; margin: 20px auto; border-radius: 20px; }
+    @media print { body { background: white; } .tab-content:not(.active) { display: none !important; } }
+
+    /* ===== Relatório detalhado ===== */
+    .legend {
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .legend-item:last-child { border-bottom: none; }
+    .legend-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .swatch { width: 12px; height: 12px; border-radius: 4px; flex: 0 0 12px; }
+    .legend-title { font-weight: 700; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .legend-sub { font-size: 12px; color: #666; }
+    .legend-right { text-align: right; flex: 0 0 auto; }
+    .legend-value { font-weight: 800; color: #333; }
+    .legend-pct { font-size: 12px; color: #666; }
+
+    .table-wrap {
+      margin-top: 14px;
+      overflow: auto;
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    table.report { width: 100%; border-collapse: collapse; font-size: 14px; }
+    table.report th, table.report td { padding: 10px 12px; border-bottom: 1px solid #eee; text-align: left; white-space: nowrap; }
+    table.report th { background: #f6f7fb; font-weight: 800; color: #333; }
+    table.report td:last-child, table.report th:last-child { text-align: right; }
+
+    .small-muted { font-size: 12px; color: #666; margin-top: 10px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💰 Gastos</h1>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('novo', event)">Novo gasto</button>
+      <button class="tab" onclick="showTab('lista', event)">Meus gastos</button>
+      <button class="tab" onclick="showTab('relatorio', event)">Relatório</button>
+    </div>
+
+    <!-- NOVO GASTO -->
+    <div id="novo" class="tab-content active">
+      <div class="form-group">
+        <label>Data</label>
+        <input type="date" id="data">
+      </div>
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="categoria">
+          <option value="">Selecione...</option>
+          <option value="Alimentação">🍽️ Alimentação</option>
+          <option value="Transporte">🚗 Transporte</option>
+          <option value="Mercado">🛒 Mercado</option>
+          <option value="Contas">💡 Contas</option>
+          <option value="Lazer">🎉 Lazer</option>
+          <option value="Compra na internet">🛍️ Compra na internet</option>
+          <option value="Jogos">🎮 Jogos</option>
+          <option value="Outros">📦 Outros</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Descrição</label>
+        <input type="text" id="descricao" placeholder="Ex: Café, Uber, etc.">
+      </div>
+      <div class="form-group">
+        <label>Forma de pagamento</label>
+        <select id="forma">
+          <option value="">Selecione...</option>
+          <option value="Pix">💸 Pix</option>
+          <option value="Crédito">💳 Crédito</option>
+          <option value="Débito">💳 Débito</option>
+          <option value="Espécie">💵 Espécie</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Valor (R$)</label>
+        <input type="number" id="valor" step="0.01" placeholder="0.00">
+      </div>
+      <button onclick="salvarGasto()">💾 Salvar</button>
+    </div>
+
+    <!-- LISTA -->
+    <div id="lista" class="tab-content">
+      <div class="filter-group">
+        <select id="filtroMes" onchange="filtrarGastos()">
+          <option value="">Todos os meses</option>
+        </select>
+        <select id="filtroCat" onchange="filtrarGastos()">
+          <option value="">Todas categorias</option>
+        </select>
+      </div>
+      <div id="summaryLista" class="summary" style="display:none;">
+        <div>Total selecionado</div>
+        <div id="totalLista" class="total-amount">R$ 0,00</div>
+      </div>
+      <div id="listaGastos"></div>
+      <div id="emptyLista" class="empty-state">
+        <div>📝</div>
+        <div>Nenhum gasto ainda</div>
+        <div>Vá em "Novo gasto" para começar!</div>
+      </div>
+    </div>
+
+    <!-- RELATÓRIO -->
+    <div id="relatorio" class="tab-content">
+      <div class="filter-group">
+        <select id="relatorioMes" onchange="gerarRelatorio()">
+          <option value="">Selecione um mês</option>
+        </select>
+      </div>
+
+      <div id="summaryRelatorio" class="summary" style="display:none;">
+        <div>Total do mês</div>
+        <div id="totalRelatorio" class="total-amount">R$ 0,00</div>
+      </div>
+
+      <canvas id="graficoCategorias" width="320" height="320" style="display:none;"></canvas>
+
+      <div id="legendaCategorias" class="legend" style="display:none;"></div>
+
+      <div id="tabelaCategorias" class="table-wrap" style="display:none;"></div>
+
+      <div class="export-btns" id="exportBtns" style="display:none;">
+        <button onclick="exportarCSV()">📊 CSV (Excel)</button>
+        <button onclick="imprimirRelatorio()">🖨️ PDF</button>
+      </div>
+
+      <div id="emptyRelatorio" class="empty-state">
+        <div>📈</div>
+        <div>Selecione um mês para relatório</div>
+      </div>
+
+      <div class="small-muted" id="infoRelatorio" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script>
+    let gastos = JSON.parse(localStorage.getItem('gastos')) || [];
+
+    const CATEGORIAS_PADRAO = [
+      "Alimentação", "Transporte", "Mercado", "Contas", "Lazer",
+      "Compra na internet", "Jogos", "Outros"
+    ];
+
+    const PALETA = [
+      '#FF6384','#36A2EB','#FFCE56','#4BC0C0',
+      '#9966FF','#FF9F40','#2ecc71','#e74c3c',
+      '#3498db','#9b59b6'
+    ];
+
+    // Data de hoje
+    const hoje = new Date();
+    const dataHoje = hoje.toISOString().split('T')[0];
+    document.getElementById('data').value = dataHoje;
+
+    function showTab(nome, ev) {
+      // Esconder todas
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+      // Mostrar selecionada
+      document.getElementById(nome).classList.add('active');
+      if (ev && ev.target) ev.target.classList.add('active');
+
+      // Atualizar telas
+      if (nome === 'lista') atualizarLista();
+      if (nome === 'relatorio') gerarRelatorio();
+    }
+
+    function salvarGasto() {
+      const data = document.getElementById('data').value;
+
+      const novoGasto = {
+        id: Date.now(),
+        data: data,
+        categoria: document.getElementById('categoria').value,
+        descricao: document.getElementById('descricao').value,
+        forma: document.getElementById('forma').value,
+        valor: parseFloat(document.getElementById('valor').value) || 0,
+        anoMes: formatarAnoMes(data)
+      };
+
+      if (!novoGasto.categoria || novoGasto.valor <= 0) {
+        alert('❌ Categoria e valor são obrigatórios!');
+        return;
+      }
+
+      gastos.push(novoGasto);
+      localStorage.setItem('gastos', JSON.stringify(gastos));
+
+      // Limpar form
+      document.getElementById('descricao').value = '';
+      document.getElementById('valor').value = '';
+      document.getElementById('forma').value = '';
+
+      alert('✅ Salvo!');
+      atualizarTudo();
+    }
+
+    function excluirGasto(id) {
+      if (confirm('🗑️ Excluir este gasto?')) {
+        gastos = gastos.filter(g => g.id != id);
+        localStorage.setItem('gastos', JSON.stringify(gastos));
+        atualizarTudo();
+      }
+    }
+
+    function atualizarLista() {
+      const listaEl = document.getElementById('listaGastos');
+      const emptyEl = document.getElementById('emptyLista');
+      const summaryEl = document.getElementById('summaryLista');
+
+      const filtroMes = document.getElementById('filtroMes').value;
+      const filtroCat = document.getElementById('filtroCat').value;
+
+      let gastosVisiveis = gastos
+        .filter(g => {
+          const mesOk = !filtroMes || g.anoMes === filtroMes;
+          const catOk = !filtroCat || g.categoria === filtroCat;
+          return mesOk && catOk;
+        })
+        .sort((a, b) => new Date(b.data) - new Date(a.data));
+
+      if (gastosVisiveis.length === 0) {
+        listaEl.innerHTML = '';
+        emptyEl.style.display = 'block';
+        summaryEl.style.display = 'none';
+        return;
+      }
+
+      emptyEl.style.display = 'none';
+      summaryEl.style.display = 'block';
+      document.getElementById('totalLista').textContent = formatarMoeda(somaGastos(gastosVisiveis));
+
+      listaEl.innerHTML = gastosVisiveis.map(g => `
+        <div class="list-item">
+          <div class="list-info">
+            <div style="font-weight: 600;">${escapeHtml(g.descricao || g.categoria)}</div>
+            <div class="list-date">${formatarData(g.data)} • ${escapeHtml(g.categoria)} • ${escapeHtml(g.forma || '')}</div>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <div class="list-amount">${formatarMoeda(g.valor)}</div>
+            <button class="danger" onclick="excluirGasto(${g.id})" style="width: auto; padding: 8px 12px;">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function gerarRelatorio() {
+      const mesSelecionado = document.getElementById('relatorioMes').value;
+      const canvas = document.getElementById('graficoCategorias');
+      const summary = document.getElementById('summaryRelatorio');
+      const exportBtns = document.getElementById('exportBtns');
+      const empty = document.getElementById('emptyRelatorio');
+      const legenda = document.getElementById('legendaCategorias');
+      const tabela = document.getElementById('tabelaCategorias');
+      const info = document.getElementById('infoRelatorio');
+
+      if (!mesSelecionado) {
+        canvas.style.display = 'none';
+        summary.style.display = 'none';
+        exportBtns.style.display = 'none';
+        legenda.style.display = 'none';
+        tabela.style.display = 'none';
+        info.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+      }
+
+      const gastosMes = gastos.filter(g => g.anoMes === mesSelecionado);
+      const totalMes = somaGastos(gastosMes);
+
+      document.getElementById('totalRelatorio').textContent = formatarMoeda(totalMes);
+      summary.style.display = 'block';
+      empty.style.display = 'none';
+
+      if (totalMes > 0) {
+        exportBtns.style.display = 'flex';
+        desenharGrafico(gastosMes);
+        montarResumoCategorias(gastosMes, totalMes);
+        info.textContent = `Mês selecionado: ${formatarMes(mesSelecionado)} • Lançamentos: ${gastosMes.length}`;
+        info.style.display = 'block';
+      } else {
+        canvas.style.display = 'none';
+        exportBtns.style.display = 'none';
+        legenda.style.display = 'none';
+        tabela.style.display = 'none';
+        info.style.display = 'none';
+      }
+    }
+
+    function desenharGrafico(gastosMes) {
+      const canvas = document.getElementById('graficoCategorias');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 320;
+      canvas.height = 320;
+
+      const porCat = {};
+      gastosMes.forEach(g => (porCat[g.categoria] = (porCat[g.categoria] || 0) + g.valor));
+
+      const entries = Object.entries(porCat).sort((a, b) => b[1] - a[1]); // maior -> menor
+      const valores = entries.map(e => e[1]);
+
+      const total = valores.reduce((a, b) => a + b, 0);
+      let angulo = -Math.PI / 2;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Pizza
+      valores.forEach((v, i) => {
+        const fatia = (v / total) * 2 * Math.PI;
+        ctx.beginPath();
+        ctx.arc(160, 160, 120, angulo, angulo + fatia);
+        ctx.lineTo(160, 160);
+        ctx.closePath();
+        ctx.fillStyle = PALETA[i % PALETA.length];
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        angulo += fatia;
+      });
+
+      // Labels (percentual) – evita poluir com fatias pequenas
+      angulo = -Math.PI / 2;
+      ctx.fillStyle = '#111';
+      ctx.font = '700 12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+
+      valores.forEach((v, i) => {
+        const fatia = (v / total) * 2 * Math.PI;
+        const meio = angulo + fatia / 2;
+        const pct = Math.round((v / total) * 100);
+
+        if (pct >= 6) {
+          const x = 160 + Math.cos(meio) * 85;
+          const y = 160 + Math.sin(meio) * 85;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${pct}%`, x, y);
+        }
+
+        angulo += fatia;
+      });
+
+      canvas.style.display = 'block';
+    }
+
+    function montarResumoCategorias(gastosMes, totalMes) {
+      const legenda = document.getElementById('legendaCategorias');
+      const tabela = document.getElementById('tabelaCategorias');
+
+      const porCat = {};
+      const stats = {}; // {cat: {qtd, total, max, min}}
+
+      gastosMes.forEach(g => {
+        porCat[g.categoria] = (porCat[g.categoria] || 0) + g.valor;
+
+        if (!stats[g.categoria]) {
+          stats[g.categoria] = { qtd: 0, total: 0, max: g.valor, min: g.valor };
+        }
+        stats[g.categoria].qtd += 1;
+        stats[g.categoria].total += g.valor;
+        stats[g.categoria].max = Math.max(stats[g.categoria].max, g.valor);
+        stats[g.categoria].min = Math.min(stats[g.categoria].min, g.valor);
+      });
+
+      const entries = Object.entries(porCat).sort((a, b) => b[1] - a[1]);
+
+      // Legenda (categoria + valor + %)
+      legenda.innerHTML = entries.map(([cat, val], idx) => {
+        const pct = totalMes > 0 ? (val / totalMes) * 100 : 0;
+        const cor = PALETA[idx % PALETA.length];
+        const qtd = stats[cat].qtd;
+        const media = val / qtd;
+
+        return `
+          <div class="legend-item">
+            <div class="legend-left">
+              <span class="swatch" style="background:${cor}"></span>
+              <div style="min-width:0">
+                <div class="legend-title">${escapeHtml(cat)}</div>
+                <div class="legend-sub">Qtd: ${qtd} • Média: ${formatarMoeda(media)}</div>
+              </div>
+            </div>
+            <div class="legend-right">
+              <div class="legend-value">${formatarMoeda(val)}</div>
+              <div class="legend-pct">${pct.toFixed(1)}%</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      legenda.style.display = 'block';
+
+      // Tabela detalhada por categoria
+      const linhas = entries.map(([cat, val]) => {
+        const pct = totalMes > 0 ? (val / totalMes) * 100 : 0;
+        const qtd = stats[cat].qtd;
+        const media = val / qtd;
+        const max = stats[cat].max;
+        const min = stats[cat].min;
+
+        return `
+          <tr>
+            <td>${escapeHtml(cat)}</td>
+            <td>${qtd}</td>
+            <td>${formatarMoeda(media)}</td>
+            <td>${formatarMoeda(min)}</td>
+            <td>${formatarMoeda(max)}</td>
+            <td>${pct.toFixed(1)}%</td>
+            <td>${formatarMoeda(val)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      tabela.innerHTML = `
+        <table class="report">
+          <thead>
+            <tr>
+              <th>Categoria</th>
+              <th>Qtd</th>
+              <th>Média</th>
+              <th>Menor</th>
+              <th>Maior</th>
+              <th>%</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${linhas}
+          </tbody>
+        </table>
+      `;
+
+      tabela.style.display = 'block';
+    }
+
+    function popularSelects() {
+      const mesesUnicos = [...new Set(gastos.map(g => g.anoMes))].sort().reverse();
+
+      // Meses (Lista)
+      document.getElementById('filtroMes').innerHTML =
+        '<option value="">Todos os meses</option>' +
+        mesesUnicos.map(m => `<option value="${m}">${formatarMes(m)}</option>`).join('');
+
+      // Meses (Relatório)
+      document.getElementById('relatorioMes').innerHTML =
+        '<option value="">Selecione um mês</option>' +
+        mesesUnicos.map(m => `<option value="${m}">${formatarMes(m)}</option>`).join('');
+
+      // Categorias (Lista)
+      const catsEncontradas = [...new Set(gastos.map(g => g.categoria))];
+      const cats = (catsEncontradas.length ? catsEncontradas : CATEGORIAS_PADRAO).slice().sort((a,b) => a.localeCompare(b,'pt-BR'));
+
+      document.getElementById('filtroCat').innerHTML =
+        '<option value="">Todas categorias</option>' +
+        cats.map(c => `<option value="${escapeHtmlAttr(c)}">${escapeHtml(c)}</option>`).join('');
+    }
+
+    function atualizarTudo() {
+      popularSelects();
+      atualizarLista();
+      gerarRelatorio();
+    }
+
+    function filtrarGastos() {
+      atualizarLista();
+    }
+
+    function exportarCSV() {
+      const mes = document.getElementById('relatorioMes').value;
+      const gastosMes = gastos.filter(g => g.anoMes === mes);
+
+      // BOM UTF-8 ajuda o Excel a entender acentos [web:56]
+      // "sep=;" indica o separador para o Excel [web:64][web:61]
+      const BOM = '\ufeff';
+      const SEP = ';';
+      const EOL = '\r\n';
+
+      const total = somaGastos(gastosMes);
+
+      // Resumo por categoria
+      const porCat = {};
+      const contCat = {};
+      gastosMes.forEach(g => {
+        porCat[g.categoria] = (porCat[g.categoria] || 0) + g.valor;
+        contCat[g.categoria] = (contCat[g.categoria] || 0) + 1;
+      });
+
+      const resumoOrdenado = Object.entries(porCat).sort((a, b) => b[1] - a[1]);
+
+      const nomeMes = formatarMes(mes);
+      const agora = new Date().toLocaleString('pt-BR');
+
+      const esc = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`;
+      const num = (n) => String(Number(n || 0).toFixed(2)).replace('.', ',');
+
+      let csv = '';
+      csv += BOM + `sep=${SEP}` + EOL;
+      csv += `Relatório de Gastos${SEP}${esc(nomeMes)}${EOL}`;
+      csv += `Gerado em${SEP}${esc(agora)}${EOL}`;
+      csv += EOL;
+
+      csv += `Resumo por categoria${EOL}`;
+      csv += `Categoria${SEP}Qtd lançamentos${SEP}Total${SEP}% do mês${EOL}`;
+      resumoOrdenado.forEach(([cat, val]) => {
+        const pct = total > 0 ? (val / total) * 100 : 0;
+        csv += `${esc(cat)}${SEP}${contCat[cat] || 0}${SEP}${num(val)}${SEP}${num(pct)}%${EOL}`;
+      });
+      csv += EOL;
+
+      csv += `Detalhamento${EOL}`;
+      csv += `Data${SEP}Categoria${SEP}Descrição${SEP}Forma${SEP}Valor${EOL}`;
+      gastosMes
+        .sort((a, b) => new Date(a.data) - new Date(b.data))
+        .forEach(g => {
+          csv += `${esc(formatarData(g.data))}${SEP}${esc(g.categoria)}${SEP}${esc(g.descricao)}${SEP}${esc(g.forma)}${SEP}${num(g.valor)}${EOL}`;
+        });
+
+      csv += EOL;
+      csv += `Total do mês${SEP}${SEP}${SEP}${SEP}${num(total)}${EOL}`;
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `Relatorio_${mes}.csv`;
+      link.click();
+    }
+
+    function imprimirRelatorio() {
+      window.print();
+    }
+
+    // ===== Utilitários =====
+    function formatarAnoMes(dataStr) {
+      // Evita problemas de fuso: pega direto do texto YYYY-MM-DD
+      if (!dataStr || dataStr.length < 7) return '';
+      return dataStr.slice(0, 7);
+    }
+
+    function formatarMes(anoMes) {
+      if (!anoMes) return '';
+      const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      const [ano, mes] = anoMes.split('-');
+      const idx = Math.max(1, Math.min(12, parseInt(mes, 10))) - 1;
+      return `${meses[idx]} ${ano}`;
+    }
+
+    function formatarData(data) {
+      // data vem como YYYY-MM-DD
+      const d = new Date(data + 'T00:00:00');
+      return d.toLocaleDateString('pt-BR');
+    }
+
+    function formatarMoeda(valor) {
+      return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(valor);
+    }
+
+    function somaGastos(arr) {
+      return arr.reduce((t,g) => t + (Number(g.valor) || 0), 0);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function escapeHtmlAttr(str) {
+      // mesmo escape (para usar em value="")
+      return escapeHtml(str);
+    }
+
+    // INICIALIZAR
+    atualizarTudo();
+  </script>
+</body>
+</html>
