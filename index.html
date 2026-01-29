@@ -81,6 +81,7 @@
 
     <div class="tabs">
       <button class="tab active" data-tab="novo">Novo</button>
+      <button class="tab" data-tab="ganhos">Ganhos</button>
       <button class="tab" data-tab="lista">Lista</button>
       <button class="tab" data-tab="relatorio">Relatório</button>
     </div>
@@ -120,6 +121,32 @@
       <button id="btnSalvar">Salvar</button>
     </section>
 
+    <!-- GANHOS -->
+    <section id="ganhos" class="card">
+      <label>Data</label>
+      <input type="date" id="dataGanho">
+
+      <label>Tipo</label>
+      <select id="tipoGanho">
+        <option value="">Selecione...</option>
+        <option>Salário</option>
+        <option>Venda</option>
+        <option>Manutenção</option>
+        <option>Outros</option>
+      </select>
+
+      <label>Descrição</label>
+      <input id="descGanho" placeholder="Ex: salário, venda iPhone, manutenção...">
+
+      <label>Valor (R$)</label>
+      <input type="number" id="valorGanho" step="0.01" placeholder="0,00">
+
+      <button id="btnSalvarGanho">Salvar ganho</button>
+
+      <div style="margin-top:12px" id="listaGanhos"></div>
+      <div class="empty" id="emptyGanhos">Nenhum ganho ainda.</div>
+    </section>
+
     <section id="lista" class="card">
       <div class="filters">
         <select id="filtroMes"><option value="">Todos os meses</option></select>
@@ -141,8 +168,18 @@
       </div>
 
       <div class="summary" id="sumRel" style="display:none">
-        <div>Total do mês</div>
+        <div>Total do mês (gastos)</div>
         <div class="total" id="totalRel">R$ 0,00</div>
+      </div>
+
+      <div class="summary" id="sumGanhos" style="display:none">
+        <div>Total de ganhos do mês</div>
+        <div class="total" id="totalGanhos">R$ 0,00</div>
+      </div>
+
+      <div class="summary" id="sumSaldo" style="display:none">
+        <div>Saldo do mês (ganhos - gastos)</div>
+        <div class="total" id="saldoMes">R$ 0,00</div>
       </div>
 
       <div id="detalheCategorias" class="cats" style="display:none"></div>
@@ -244,7 +281,9 @@
     // Estado
     let userUid = null;
     let gastos = [];
+    let ganhos = [];
     let unsub = null;
+    let unsubGanhos = null;
     let unlocked = false;
 
     // Storage keys
@@ -262,6 +301,7 @@
 
     // Defaults
     document.getElementById("data").value = new Date().toISOString().slice(0,10);
+    document.getElementById("dataGanho").value = new Date().toISOString().slice(0,10);
 
     function setStatus(t){ syncStatus.textContent = t; }
     function show(el, on){ el.classList.toggle("show", !!on); }
@@ -276,6 +316,7 @@
       cards.forEach(c => c.classList.toggle("active", c.id === id));
       if (id === "lista") renderLista();
       if (id === "relatorio") renderRelatorio();
+      if (id === "ganhos") renderGanhos();
     }));
 
     // Helpers
@@ -320,13 +361,14 @@
       refreshSelects();
       renderLista();
       renderRelatorio();
+      renderGanhos();
     }
 
     // PIN set
     document.getElementById("btnSalvarPin").addEventListener("click", async ()=>{
       const p1 = (document.getElementById("pinNovo").value||"").trim();
       const p2 = (document.getElementById("pinNovo2").value||"").trim();
-      if(!/^\d{4,8}$/.test(p1)){ pinMsg.textContent="PIN precisa ter 4 a 8 dígitos."; return; }
+      if(!/^\\d{4,8}$/.test(p1)){ pinMsg.textContent="PIN precisa ter 4 a 8 dígitos."; return; }
       if(p1!==p2){ pinMsg.textContent="Os PINs não conferem."; return; }
       localStorage.setItem(PIN_HASH_KEY, await sha256Hex(p1));
       unlocked = true;
@@ -337,7 +379,7 @@
     document.getElementById("btnDesbloquear").addEventListener("click", async ()=>{
       const pin = (document.getElementById("pinDigitado").value||"").trim();
       const hash = localStorage.getItem(PIN_HASH_KEY);
-      if(!/^\d{4,8}$/.test(pin)){ pinMsg.textContent="PIN inválido."; return; }
+      if(!/^\\d{4,8}$/.test(pin)){ pinMsg.textContent="PIN inválido."; return; }
       if((await sha256Hex(pin))!==hash){ pinMsg.textContent="PIN incorreto."; return; }
       unlocked = true;
       if(ready()) unlockUI();
@@ -351,13 +393,13 @@
       const atual = prompt("Digite o PIN atual:");
       if(atual === null) return;
       const a = String(atual).trim();
-      if(!/^\d{4,8}$/.test(a)){ alert("PIN inválido."); return; }
+      if(!/^\\d{4,8}$/.test(a)){ alert("PIN inválido."); return; }
       if((await sha256Hex(a))!==hash){ alert("PIN atual incorreto."); return; }
 
       const n1 = prompt("Novo PIN (4 a 8 dígitos):");
       if(n1 === null) return;
       const b = String(n1).trim();
-      if(!/^\d{4,8}$/.test(b)){ alert("Novo PIN inválido."); return; }
+      if(!/^\\d{4,8}$/.test(b)){ alert("Novo PIN inválido."); return; }
 
       const n2 = prompt("Repita o novo PIN:");
       if(n2 === null) return;
@@ -368,7 +410,7 @@
       alert("PIN alterado com sucesso neste navegador.");
     });
 
-    // Esqueci o PIN (reauth Google) [web:281]
+    // Esqueci o PIN (reauth Google)
     document.getElementById("btnEsqueciPin").addEventListener("click", async ()=>{
       pinMsg.textContent = "";
       if(!confirm("Para resetar o PIN, confirme sua conta Google. Continuar?")) return;
@@ -436,6 +478,7 @@
       if(!confirm("Sair e bloquear este navegador?")) return;
       unlocked = false;
       if(unsub){ unsub(); unsub=null; }
+      if(unsubGanhos){ unsubGanhos(); unsubGanhos=null; }
       await signOut(auth);
       btnLogout.style.display = "none";
       btnChangePin.style.display = "none";
@@ -447,19 +490,41 @@
     function expensesCol(){
       return collection(db, `users/${userUid}/expenses`);
     }
+    function incomeCol(){
+      return collection(db, `users/${userUid}/income`);
+    }
 
     function startSync(){
       if(!userUid) return;
+
       if(unsub){ unsub(); unsub=null; }
+      if(unsubGanhos){ unsubGanhos(); unsubGanhos=null; }
+
       setStatus("Sincronização: preparando...");
-      const q = query(expensesCol(), orderBy("data","desc"));
-      unsub = onSnapshot(q, (snap)=>{
+
+      const q1 = query(expensesCol(), orderBy("data","desc"));
+      unsub = onSnapshot(q1, (snap)=>{
         gastos = snap.docs.map(d=>({id:d.id, ...d.data()}));
         if(ready()) {
           setStatus("Sincronização: ativa");
           refreshSelects();
           renderLista();
           renderRelatorio();
+          renderGanhos();
+        }
+      }, (err)=>{
+        console.error(err);
+        setStatus("Sincronização: erro");
+      });
+
+      const q2 = query(incomeCol(), orderBy("data","desc"));
+      unsubGanhos = onSnapshot(q2, (snap)=>{
+        ganhos = snap.docs.map(d=>({id:d.id, ...d.data()}));
+        if(ready()) {
+          setStatus("Sincronização: ativa");
+          refreshSelects();
+          renderRelatorio();
+          renderGanhos();
         }
       }, (err)=>{
         console.error(err);
@@ -467,7 +532,7 @@
       });
     }
 
-    // CRUD
+    // CRUD - GASTOS
     document.getElementById("btnSalvar").addEventListener("click", async ()=>{
       if(!userUid){ alert("Faça login para salvar."); return; }
       if(!unlocked){ alert("Desbloqueie com PIN."); return; }
@@ -493,6 +558,31 @@
     }
     window.__del = del;
 
+    // CRUD - GANHOS
+    document.getElementById("btnSalvarGanho").addEventListener("click", async ()=>{
+      if(!userUid){ alert("Faça login para salvar."); return; }
+      if(!unlocked){ alert("Desbloqueie com PIN."); return; }
+
+      const data = document.getElementById("dataGanho").value;
+      const tipo = document.getElementById("tipoGanho").value;
+      const descricao = (document.getElementById("descGanho").value||"").trim();
+      const valor = parseFloat(document.getElementById("valorGanho").value) || 0;
+
+      if(!tipo || valor<=0){ alert("Tipo e valor são obrigatórios."); return; }
+
+      await addDoc(incomeCol(), { data, tipo, descricao, valor, anoMes: anoMes(data) });
+
+      document.getElementById("descGanho").value = "";
+      document.getElementById("valorGanho").value = "";
+      document.getElementById("tipoGanho").value = "";
+    });
+
+    async function delGanho(id){
+      if(!confirm("Excluir este ganho?")) return;
+      await deleteDoc(doc(db, `users/${userUid}/income/${id}`));
+    }
+    window.__delGanho = delGanho;
+
     // Selects + filtros
     const filtroMes = document.getElementById("filtroMes");
     const filtroCat = document.getElementById("filtroCat");
@@ -503,7 +593,10 @@
     relMes.addEventListener("change", renderRelatorio);
 
     function refreshSelects(){
-      const meses = [...new Set(gastos.map(g=>g.anoMes).filter(Boolean))].sort().reverse();
+      const mesesGastos = gastos.map(g=>g.anoMes).filter(Boolean);
+      const mesesGanhos = ganhos.map(g=>g.anoMes).filter(Boolean);
+      const meses = [...new Set([...mesesGastos, ...mesesGanhos])].sort().reverse();
+
       const cats = [...new Set(gastos.map(g=>g.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
 
       const keepFM = filtroMes.value;
@@ -519,7 +612,7 @@
       relMes.value = meses.includes(keepRM) ? keepRM : "";
     }
 
-    // Lista render
+    // Lista render (gastos)
     function renderLista(){
       const el = document.getElementById("listaGastos");
       const empty = document.getElementById("emptyLista");
@@ -557,6 +650,35 @@
       `).join("");
     }
 
+    // Lista render (ganhos)
+    function renderGanhos(){
+      const box = document.getElementById("listaGanhos");
+      const empty = document.getElementById("emptyGanhos");
+      if(!box || !empty) return;
+
+      const vis = ganhos.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+
+      if(!vis.length){
+        box.innerHTML = "";
+        empty.style.display = "block";
+        return;
+      }
+
+      empty.style.display = "none";
+      box.innerHTML = vis.map(g=>`
+        <div class="item">
+          <div class="it-left">
+            <div class="it-title">${esc(g.descricao || g.tipo || "")}</div>
+            <div class="it-sub">${dataBR(g.data)} • ${esc(g.tipo||"")}</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="it-val">${moeda(g.valor)}</div>
+            <button class="danger" style="width:auto;padding:8px 10px;margin:0" onclick="__delGanho('${g.id}')">🗑️</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
     // Relatório render
     function renderRelatorio(){
       const mes = relMes.value;
@@ -567,12 +689,20 @@
       const info = document.getElementById("infoRel");
       const exportBtns = document.getElementById("exportBtns");
 
+      const sumGanhos = document.getElementById("sumGanhos");
+      const totalGanhosEl = document.getElementById("totalGanhos");
+      const sumSaldo = document.getElementById("sumSaldo");
+      const saldoEl = document.getElementById("saldoMes");
+
       if(!mes){
         sumRel.style.display = "none";
         detalhe.style.display = "none";
         exportBtns.style.display = "none";
         info.style.display = "none";
         empty.style.display = "block";
+
+        sumGanhos.style.display = "none";
+        sumSaldo.style.display = "none";
         return;
       }
 
@@ -582,7 +712,17 @@
       sumRel.style.display = "block";
       empty.style.display = "none";
 
-      if(!total){
+      const arrGanhos = ganhos.filter(g=>g.anoMes===mes);
+      const totalGanhos = soma(arrGanhos);
+      totalGanhosEl.textContent = moeda(totalGanhos);
+      sumGanhos.style.display = "block";
+
+      const saldo = totalGanhos - total;
+      saldoEl.textContent = moeda(saldo);
+      sumSaldo.style.display = "block";
+
+      // Se não tem nem gastos nem ganhos no mês, esconde detalhamento/exports
+      if(!total && !totalGanhos){
         detalhe.style.display = "none";
         exportBtns.style.display = "none";
         info.style.display = "none";
@@ -590,8 +730,14 @@
       }
 
       exportBtns.style.display = "flex";
-      info.textContent = `Mês: ${mes} • Lançamentos: ${arr.length}`;
+      info.textContent = `Mês: ${mes} • Gastos: ${arr.length} • Ganhos: ${arrGanhos.length}`;
       info.style.display = "block";
+
+      // Detalhe por categoria (somente gastos, como era antes)
+      if(!total){
+        detalhe.style.display = "none";
+        return;
+      }
 
       const map = {};
       for(const g of arr){
@@ -655,23 +801,40 @@
     document.getElementById("btnCsv").addEventListener("click", ()=>{
       const mes = relMes.value;
       if(!mes){ alert("Selecione um mês."); return; }
-      const arr = gastos.filter(g=>g.anoMes===mes).sort((a,b)=>String(a.data).localeCompare(String(b.data)));
+
+      const arrGastos = gastos.filter(g=>g.anoMes===mes).sort((a,b)=>String(a.data).localeCompare(String(b.data)));
+      const arrGanhos = ganhos.filter(g=>g.anoMes===mes).sort((a,b)=>String(a.data).localeCompare(String(b.data)));
+
+      const totalGastos = soma(arrGastos);
+      const totalGanhos = soma(arrGanhos);
+      const saldo = totalGanhos - totalGastos;
 
       const SEP=";";
-      const EOL="\r\n";
-      const BOM="\ufeff";
+      const EOL="\\r\\n";
+      const BOM="\\ufeff";
       const escCsv = (s)=> `"${String(s??"").replaceAll('"','""')}"`;
       const num = (n)=> String(Number(n||0).toFixed(2)).replace(".",",");
 
       let csv = BOM + `sep=${SEP}` + EOL;
       csv += `Relatório${SEP}${escCsv(mes)}${EOL}${EOL}`;
-      csv += `Data${SEP}Categoria${SEP}Descrição${SEP}Forma${SEP}Valor${EOL}`;
 
-      for(const g of arr){
+      // GANHOS
+      csv += `GANHOS${EOL}`;
+      csv += `Data${SEP}Tipo${SEP}Descrição${SEP}Valor${EOL}`;
+      for(const g of arrGanhos){
+        csv += `${escCsv(dataBR(g.data))}${SEP}${escCsv(g.tipo)}${SEP}${escCsv(g.descricao)}${SEP}${num(g.valor)}${EOL}`;
+      }
+      csv += `Total de ganhos${SEP}${SEP}${SEP}${num(totalGanhos)}${EOL}${EOL}`;
+
+      // GASTOS
+      csv += `GASTOS${EOL}`;
+      csv += `Data${SEP}Categoria${SEP}Descrição${SEP}Forma${SEP}Valor${EOL}`;
+      for(const g of arrGastos){
         csv += `${escCsv(dataBR(g.data))}${SEP}${escCsv(g.categoria)}${SEP}${escCsv(g.descricao)}${SEP}${escCsv(g.forma)}${SEP}${num(g.valor)}${EOL}`;
       }
+      csv += `Total de gastos${SEP}${SEP}${SEP}${SEP}${num(totalGastos)}${EOL}${EOL}`;
 
-      csv += `${EOL}Total do mês${SEP}${SEP}${SEP}${SEP}${num(soma(arr))}${EOL}`;
+      csv += `Saldo (ganhos - gastos)${SEP}${SEP}${SEP}${SEP}${num(saldo)}${EOL}`;
 
       const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
       const a = document.createElement("a");
@@ -685,7 +848,7 @@
       show(loginOverlay, true);
       setStatus("Sincronização: desconectada");
 
-      // consome redirects (login/reauth) [web:281]
+      // consome redirects (login/reauth)
       try { await getRedirectResult(auth); } catch (_) {}
 
       onAuthStateChanged(auth, async (user)=>{
@@ -693,6 +856,7 @@
           userUid = null;
           unlocked = false;
           if(unsub){ unsub(); unsub=null; }
+          if(unsubGanhos){ unsubGanhos(); unsubGanhos=null; }
           btnLogout.style.display = "none";
           btnChangePin.style.display = "none";
           setStatus("Sincronização: desconectada");
