@@ -241,8 +241,11 @@
         <button id="btnDesbloquear">Desbloquear</button>
       </div>
 
-      <!-- Trocar PIN removido do overlay -->
-      <button class="danger" id="btnEsqueciPin">Esqueci o PIN</button>
+      <div class="row" style="margin-top:10px">
+        <button class="danger" id="btnEsqueciPin">Esqueci o PIN</button>
+        <button class="secondary" id="btnLimparPin">Limpar PIN deste navegador</button>
+      </div>
+
       <div class="msg" id="pinMsg"></div>
       <div class="note">Para resetar o PIN, você precisa confirmar sua conta Google.</div>
     </div>
@@ -264,7 +267,6 @@
       onSnapshot, query, orderBy
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAIKbBCn96YbinrRHkDcpvZ4OY7j9Z_ES8",
       authDomain: "gastos-pessoais-a716a.firebaseapp.com",
@@ -278,7 +280,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Estado
     let userUid = null;
     let gastos = [];
     let ganhos = [];
@@ -286,11 +287,9 @@
     let unsubGanhos = null;
     let unlocked = false;
 
-    // Storage keys
     const PIN_HASH_KEY = "pinHash_v1";
     const PENDING_PIN_RESET = "pendingPinReset_v1";
 
-    // UI refs
     const syncStatus = document.getElementById("syncStatus");
     const btnLogout = document.getElementById("btnLogout");
     const btnChangePin = document.getElementById("btnChangePin");
@@ -299,14 +298,12 @@
     const authMsg = document.getElementById("authMsg");
     const pinMsg = document.getElementById("pinMsg");
 
-    // Defaults
     document.getElementById("data").value = new Date().toISOString().slice(0,10);
     document.getElementById("dataGanho").value = new Date().toISOString().slice(0,10);
 
     function setStatus(t){ syncStatus.textContent = t; }
     function show(el, on){ el.classList.toggle("show", !!on); }
 
-    // Tabs
     const tabs = [...document.querySelectorAll(".tab")];
     const cards = [...document.querySelectorAll(".card")];
     tabs.forEach(t => t.addEventListener("click", () => {
@@ -319,12 +316,10 @@
       if (id === "ganhos") renderGanhos();
     }));
 
-    // Helpers
     const moeda = (v)=> new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(Number(v)||0);
     const anoMes = (d)=> (d && d.length>=7) ? d.slice(0,7) : "";
     const dataBR = (d)=> new Date(String(d)+"T00:00:00").toLocaleDateString("pt-BR");
     const esc = (s)=> String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-
     function soma(arr){ return arr.reduce((t,g)=>t+(Number(g.valor)||0),0); }
 
     async function sha256Hex(str){
@@ -348,10 +343,6 @@
       pinMode(has ? "enter" : "set");
     }
 
-    function ready(){
-      return !!userUid && unlocked;
-    }
-
     function unlockUI(){
       show(loginOverlay,false);
       show(pinOverlay,false);
@@ -364,28 +355,51 @@
       renderGanhos();
     }
 
-    // PIN set
+    // Criar PIN
     document.getElementById("btnSalvarPin").addEventListener("click", async ()=>{
       const p1 = (document.getElementById("pinNovo").value||"").trim();
       const p2 = (document.getElementById("pinNovo2").value||"").trim();
       if(!/^\\d{4,8}$/.test(p1)){ pinMsg.textContent="PIN precisa ter 4 a 8 dígitos."; return; }
       if(p1!==p2){ pinMsg.textContent="Os PINs não conferem."; return; }
+
       localStorage.setItem(PIN_HASH_KEY, await sha256Hex(p1));
       unlocked = true;
-      if(ready()) unlockUI();
+
+      // destrava se já está logado; se não, só fecha o overlay
+      if(userUid) unlockUI();
+      else show(pinOverlay,false);
     });
 
-    // PIN enter
+    // Entrar com PIN
     document.getElementById("btnDesbloquear").addEventListener("click", async ()=>{
       const pin = (document.getElementById("pinDigitado").value||"").trim();
       const hash = localStorage.getItem(PIN_HASH_KEY);
+
+      if(!hash){
+        pinMsg.textContent="Nenhum PIN definido. Crie um PIN.";
+        pinMode("set");
+        return;
+      }
       if(!/^\\d{4,8}$/.test(pin)){ pinMsg.textContent="PIN inválido."; return; }
-      if((await sha256Hex(pin))!==hash){ pinMsg.textContent="PIN incorreto."; return; }
+
+      const calc = await sha256Hex(pin);
+      if(calc !== hash){ pinMsg.textContent="PIN incorreto."; return; }
+
       unlocked = true;
-      if(ready()) unlockUI();
+      if(userUid) unlockUI();
+      else show(pinOverlay,false);
     });
 
-    // Trocar PIN (só dentro do app)
+    // Limpar PIN local (para resolver “PIN errado” por sobra antiga)
+    document.getElementById("btnLimparPin").addEventListener("click", async ()=>{
+      if(!confirm("Remover o PIN salvo neste navegador? Você precisará criar um novo PIN.")) return;
+      localStorage.removeItem(PIN_HASH_KEY);
+      unlocked = false;
+      pinMode("set");
+      pinMsg.textContent = "PIN removido. Crie um novo PIN.";
+    });
+
+    // Trocar PIN
     btnChangePin.addEventListener("click", async ()=>{
       const hash = localStorage.getItem(PIN_HASH_KEY);
       if(!hash){ alert("Nenhum PIN definido."); await requirePin(); return; }
@@ -423,11 +437,13 @@
       try{
         try{
           await reauthenticateWithPopup(user, provider);
+          // sucesso: limpa hash e manda criar novo
           localStorage.removeItem(PIN_HASH_KEY);
           unlocked = false;
           pinMode("set");
           pinMsg.textContent = "PIN removido. Crie um novo PIN.";
         } catch {
+          // fallback redirect
           sessionStorage.setItem(PENDING_PIN_RESET, "1");
           await reauthenticateWithRedirect(user, provider);
         }
@@ -484,15 +500,12 @@
       btnChangePin.style.display = "none";
       setStatus("Sincronização: desconectada");
       show(loginOverlay,true);
+      show(pinOverlay,false);
     });
 
     // Firestore
-    function expensesCol(){
-      return collection(db, `users/${userUid}/expenses`);
-    }
-    function incomeCol(){
-      return collection(db, `users/${userUid}/income`);
-    }
+    function expensesCol(){ return collection(db, `users/${userUid}/expenses`); }
+    function incomeCol(){ return collection(db, `users/${userUid}/income`); }
 
     function startSync(){
       if(!userUid) return;
@@ -505,7 +518,7 @@
       const q1 = query(expensesCol(), orderBy("data","desc"));
       unsub = onSnapshot(q1, (snap)=>{
         gastos = snap.docs.map(d=>({id:d.id, ...d.data()}));
-        if(ready()) {
+        if(unlocked) {
           setStatus("Sincronização: ativa");
           refreshSelects();
           renderLista();
@@ -520,7 +533,7 @@
       const q2 = query(incomeCol(), orderBy("data","desc"));
       unsubGanhos = onSnapshot(q2, (snap)=>{
         ganhos = snap.docs.map(d=>({id:d.id, ...d.data()}));
-        if(ready()) {
+        if(unlocked) {
           setStatus("Sincronização: ativa");
           refreshSelects();
           renderRelatorio();
@@ -700,7 +713,6 @@
         exportBtns.style.display = "none";
         info.style.display = "none";
         empty.style.display = "block";
-
         sumGanhos.style.display = "none";
         sumSaldo.style.display = "none";
         return;
@@ -721,7 +733,6 @@
       saldoEl.textContent = moeda(saldo);
       sumSaldo.style.display = "block";
 
-      // Se não tem nem gastos nem ganhos no mês, esconde detalhamento/exports
       if(!total && !totalGanhos){
         detalhe.style.display = "none";
         exportBtns.style.display = "none";
@@ -733,7 +744,6 @@
       info.textContent = `Mês: ${mes} • Gastos: ${arr.length} • Ganhos: ${arrGanhos.length}`;
       info.style.display = "block";
 
-      // Detalhe por categoria (somente gastos, como era antes)
       if(!total){
         detalhe.style.display = "none";
         return;
@@ -818,7 +828,6 @@
       let csv = BOM + `sep=${SEP}` + EOL;
       csv += `Relatório${SEP}${escCsv(mes)}${EOL}${EOL}`;
 
-      // GANHOS
       csv += `GANHOS${EOL}`;
       csv += `Data${SEP}Tipo${SEP}Descrição${SEP}Valor${EOL}`;
       for(const g of arrGanhos){
@@ -826,7 +835,6 @@
       }
       csv += `Total de ganhos${SEP}${SEP}${SEP}${num(totalGanhos)}${EOL}${EOL}`;
 
-      // GASTOS
       csv += `GASTOS${EOL}`;
       csv += `Data${SEP}Categoria${SEP}Descrição${SEP}Forma${SEP}Valor${EOL}`;
       for(const g of arrGastos){
@@ -851,6 +859,15 @@
       // consome redirects (login/reauth)
       try { await getRedirectResult(auth); } catch (_) {}
 
+      // se voltou de redirect do "Esqueci o PIN", e já está logado, libera o modo de criar PIN
+      if(sessionStorage.getItem(PENDING_PIN_RESET)==="1"){
+        sessionStorage.removeItem(PENDING_PIN_RESET);
+        localStorage.removeItem(PIN_HASH_KEY);
+        unlocked = false;
+        show(pinOverlay,true);
+        pinMode("set");
+      }
+
       onAuthStateChanged(auth, async (user)=>{
         if(!user){
           userUid = null;
@@ -868,21 +885,8 @@
         show(loginOverlay,false);
         startSync();
 
-        // se voltamos de reauth para reset PIN
-        if(sessionStorage.getItem(PENDING_PIN_RESET)==="1"){
-          sessionStorage.removeItem(PENDING_PIN_RESET);
-          localStorage.removeItem(PIN_HASH_KEY);
-          unlocked = false;
-          show(pinOverlay,true);
-          pinMode("set");
-          return;
-        }
-
+        // Sempre pede PIN (ou cria, se não existir)
         await requirePin();
-        // vai desbloquear depois que PIN der OK
-        if(localStorage.getItem(PIN_HASH_KEY) && unlocked){
-          unlockUI();
-        }
       });
     }
 
