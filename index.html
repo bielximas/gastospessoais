@@ -6,15 +6,33 @@
   <title>Gastos</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:16px}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:16px}
     .container{max-width:760px;margin:0 auto}
     h1{color:#fff;text-align:center;margin:10px 0 14px}
     .status{display:flex;justify-content:space-between;align-items:center;color:#fff;font-size:12px;margin-bottom:10px}
     .pill{background:#eef2ff;color:#273c75;font-weight:800;border-radius:999px;padding:6px 10px;display:inline-block}
     .status a{color:#fff;text-decoration:underline;cursor:pointer;margin-left:10px}
-    .tabs{display:flex;background:rgba(255,255,255,.95);border-radius:14px;overflow:hidden;margin-bottom:12px}
-    .tab{flex:1;border:0;background:transparent;padding:12px;font-weight:800;cursor:pointer}
+
+    /* Tabs */
+    .tabs{
+      display:flex;
+      background:#000;                 /* fundo preto para contraste */
+      border-radius:14px;
+      overflow:hidden;
+      margin-bottom:12px;
+      border:1px solid rgba(255,255,255,.15);
+    }
+    .tab{
+      flex:1;
+      border:0;
+      background:#000;                 /* botão preto (inativo) */
+      color:#fff;                      /* texto branco */
+      padding:12px;
+      font-weight:900;
+      cursor:pointer;
+    }
     .tab.active{background:#007AFF;color:#fff}
+
     .card{background:rgba(255,255,255,.95);border-radius:18px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none}
     .card.active{display:block}
     label{display:block;font-weight:800;margin:12px 0 8px;color:#222}
@@ -37,6 +55,7 @@
     .filters select{flex:1}
     .export{display:flex;gap:10px;margin-top:12px}
     .export button{margin-top:0;flex:1;padding:10px}
+
     /* Relatório detalhado */
     .cats{margin-top:12px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06)}
     .cats details{border-bottom:1px solid #eee}
@@ -52,6 +71,7 @@
     .cat-item .desc{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
     .cat-item .sub{font-size:12px;color:#666;margin-top:2px}
     .cat-item .val{font-weight:900;white-space:nowrap}
+
     /* Overlays */
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:14px;z-index:9999}
     .overlay.show{display:flex}
@@ -59,6 +79,7 @@
     .modal h2{font-size:18px;margin-bottom:10px;color:#111}
     .note{font-size:12px;color:#555;margin-top:8px;line-height:1.35}
     .msg{font-size:12px;color:#c0392b;font-weight:900;margin-top:8px;min-height:16px}
+
     @media print{
       body{background:#fff;padding:0}
       .tabs,.status,.overlay,.export{display:none!important}
@@ -80,13 +101,14 @@
     <h1>Gastos</h1>
 
     <div class="tabs">
-      <button class="tab active" data-tab="novo">Novo</button>
+      <button class="tab active" data-tab="gastos">Gastos</button>
       <button class="tab" data-tab="ganhos">Ganhos</button>
       <button class="tab" data-tab="lista">Lista</button>
       <button class="tab" data-tab="relatorio">Relatório</button>
     </div>
 
-    <section id="novo" class="card active">
+    <!-- GASTOS (antes era "novo") -->
+    <section id="gastos" class="card active">
       <label>Data</label>
       <input type="date" id="data">
 
@@ -118,7 +140,7 @@
       <label>Valor (R$)</label>
       <input type="number" id="valor" step="0.01" placeholder="0,00">
 
-      <button id="btnSalvar">Salvar</button>
+      <button id="btnSalvar" type="button">Salvar gasto</button>
     </section>
 
     <!-- GANHOS -->
@@ -139,9 +161,10 @@
       <input id="descGanho" placeholder="Ex: salário, venda iPhone, manutenção...">
 
       <label>Valor (R$)</label>
-      <input type="number" id="valorGanho" step="0.01" placeholder="0,00">
+      <input type="text" id="valorGanho" inputmode="decimal" placeholder="0,00">
 
-      <button id="btnSalvarGanho">Salvar ganho</button>
+      <!-- onclick + type=button para não depender de listener -->
+      <button id="btnSalvarGanho" type="button" onclick="__addGanho()">Salvar ganho</button>
 
       <div style="margin-top:12px" id="listaGanhos"></div>
       <div class="empty" id="emptyGanhos">Nenhum ganho ainda.</div>
@@ -185,8 +208,8 @@
       <div id="detalheCategorias" class="cats" style="display:none"></div>
 
       <div class="export" id="exportBtns" style="display:none">
-        <button id="btnCsv">CSV (Excel)</button>
-        <button id="btnPdf">PDF</button>
+        <button id="btnCsv" type="button">CSV (Excel)</button>
+        <button id="btnPdf" type="button">PDF</button>
       </div>
 
       <div class="empty" id="emptyRel">Selecione um mês para ver o relatório.</div>
@@ -200,8 +223,8 @@
       <h2>Entrar para sincronizar</h2>
 
       <div class="row">
-        <button id="btnGoogle">Entrar com Google</button>
-        <button class="secondary" id="btnToggleEmail">Email/senha</button>
+        <button id="btnGoogle" type="button">Entrar com Google</button>
+        <button class="secondary" id="btnToggleEmail" type="button">Email/senha</button>
       </div>
 
       <div id="emailBox" style="display:none;margin-top:12px">
@@ -212,8 +235,8 @@
         <input id="authPass" type="password" autocomplete="current-password">
 
         <div class="row">
-          <button id="btnEntrar">Entrar</button>
-          <button class="secondary" id="btnCriar">Criar conta</button>
+          <button id="btnEntrar" type="button">Entrar</button>
+          <button class="secondary" id="btnCriar" type="button">Criar conta</button>
         </div>
       </div>
 
@@ -232,18 +255,18 @@
         <input id="pinNovo" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 1234">
         <label style="margin-top:10px">Repita o PIN</label>
         <input id="pinNovo2" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 1234">
-        <button id="btnSalvarPin">Salvar PIN</button>
+        <button id="btnSalvarPin" type="button">Salvar PIN</button>
       </div>
 
       <div id="pinEnter" style="display:none">
         <label>Digite seu PIN</label>
         <input id="pinDigitado" inputmode="numeric" pattern="[0-9]*" placeholder="••••">
-        <button id="btnDesbloquear">Desbloquear</button>
+        <button id="btnDesbloquear" type="button">Desbloquear</button>
       </div>
 
       <div class="row" style="margin-top:10px">
-        <button class="danger" id="btnEsqueciPin">Esqueci o PIN</button>
-        <button class="secondary" id="btnLimparPin">Limpar PIN deste navegador</button>
+        <button class="danger" id="btnEsqueciPin" type="button">Esqueci o PIN</button>
+        <button class="secondary" id="btnLimparPin" type="button">Limpar PIN deste navegador</button>
       </div>
 
       <div class="msg" id="pinMsg"></div>
@@ -304,6 +327,7 @@
     function setStatus(t){ syncStatus.textContent = t; }
     function show(el, on){ el.classList.toggle("show", !!on); }
 
+    // Tabs
     const tabs = [...document.querySelectorAll(".tab")];
     const cards = [...document.querySelectorAll(".card")];
     tabs.forEach(t => t.addEventListener("click", () => {
@@ -316,11 +340,20 @@
       if (id === "ganhos") renderGanhos();
     }));
 
+    // Helpers
     const moeda = (v)=> new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(Number(v)||0);
     const anoMes = (d)=> (d && d.length>=7) ? d.slice(0,7) : "";
     const dataBR = (d)=> new Date(String(d)+"T00:00:00").toLocaleDateString("pt-BR");
     const esc = (s)=> String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
     function soma(arr){ return arr.reduce((t,g)=>t+(Number(g.valor)||0),0); }
+
+    // número robusto: aceita 10,50 e 10.50
+    function parseBRL(v){
+      const s = String(v||"").trim().replace(/\s+/g,"");
+      const norm = s.replace(/\./g,"").replace(",","."); // 1.234,56 -> 1234.56
+      const n = parseFloat(norm);
+      return Number.isFinite(n) ? n : 0;
+    }
 
     async function sha256Hex(str){
       const enc = new TextEncoder().encode(str);
@@ -355,35 +388,25 @@
       renderGanhos();
     }
 
-    // Criar PIN (regex corrigido: /^\d{4,8}$/)
+    // PIN set (regex correto)
     document.getElementById("btnSalvarPin").addEventListener("click", async ()=>{
       const p1 = (document.getElementById("pinNovo").value||"").trim();
       const p2 = (document.getElementById("pinNovo2").value||"").trim();
       if(!/^\d{4,8}$/.test(p1)){ pinMsg.textContent="PIN precisa ter 4 a 8 dígitos."; return; }
       if(p1!==p2){ pinMsg.textContent="Os PINs não conferem."; return; }
-
       localStorage.setItem(PIN_HASH_KEY, await sha256Hex(p1));
       unlocked = true;
-
       if(userUid) unlockUI();
       else show(pinOverlay,false);
     });
 
-    // Entrar com PIN (regex corrigido: /^\d{4,8}$/)
+    // PIN enter (regex correto)
     document.getElementById("btnDesbloquear").addEventListener("click", async ()=>{
       const pin = (document.getElementById("pinDigitado").value||"").trim();
       const hash = localStorage.getItem(PIN_HASH_KEY);
-
-      if(!hash){
-        pinMsg.textContent="Nenhum PIN definido. Crie um PIN.";
-        pinMode("set");
-        return;
-      }
+      if(!hash){ pinMsg.textContent="Nenhum PIN definido. Crie um PIN."; pinMode("set"); return; }
       if(!/^\d{4,8}$/.test(pin)){ pinMsg.textContent="PIN inválido."; return; }
-
-      const calc = await sha256Hex(pin);
-      if(calc !== hash){ pinMsg.textContent="PIN incorreto."; return; }
-
+      if((await sha256Hex(pin))!==hash){ pinMsg.textContent="PIN incorreto."; return; }
       unlocked = true;
       if(userUid) unlockUI();
       else show(pinOverlay,false);
@@ -398,7 +421,7 @@
       pinMsg.textContent = "PIN removido. Crie um novo PIN.";
     });
 
-    // Trocar PIN (regex corrigido: /^\d{4,8}$/)
+    // Trocar PIN
     btnChangePin.addEventListener("click", async ()=>{
       const hash = localStorage.getItem(PIN_HASH_KEY);
       if(!hash){ alert("Nenhum PIN definido."); await requirePin(); return; }
@@ -551,7 +574,7 @@
       const categoria = document.getElementById("categoria").value;
       const descricao = (document.getElementById("descricao").value||"").trim();
       const forma = (document.getElementById("forma").value||"").trim();
-      const valor = parseFloat(document.getElementById("valor").value) || 0;
+      const valor = parseBRL(document.getElementById("valor").value);
 
       if(!categoria || valor<=0){ alert("Categoria e valor são obrigatórios."); return; }
 
@@ -568,25 +591,34 @@
     }
     window.__del = del;
 
-    // CRUD - GANHOS
-    document.getElementById("btnSalvarGanho").addEventListener("click", async ()=>{
-      if(!userUid){ alert("Faça login para salvar."); return; }
-      if(!unlocked){ alert("Desbloqueie com PIN."); return; }
+    // ADD GANHO via onclick (não depende de listener)
+    window.__addGanho = async function(){
+      try{
+        if(!userUid){ alert("Faça login para salvar."); return; }
+        if(!unlocked){ alert("Desbloqueie com PIN."); return; }
 
-      const data = document.getElementById("dataGanho").value;
-      const tipo = document.getElementById("tipoGanho").value;
-      const descricao = (document.getElementById("descGanho").value||"").trim();
-      const valor = parseFloat(document.getElementById("valorGanho").value) || 0;
+        const data = document.getElementById("dataGanho").value;
+        const tipo = document.getElementById("tipoGanho").value;
+        const descricao = (document.getElementById("descGanho").value||"").trim();
+        const valor = parseBRL(document.getElementById("valorGanho").value);
 
-      if(!tipo || valor<=0){ alert("Tipo e valor são obrigatórios."); return; }
+        if(!tipo || valor<=0){
+          alert("Tipo e valor são obrigatórios (valor maior que 0).");
+          return;
+        }
 
-      await addDoc(incomeCol(), { data, tipo, descricao, valor, anoMes: anoMes(data) });
+        await addDoc(incomeCol(), { data, tipo, descricao, valor, anoMes: anoMes(data) });
 
-      document.getElementById("descGanho").value = "";
-      document.getElementById("valorGanho").value = "";
-      document.getElementById("tipoGanho").value = "";
-    });
+        document.getElementById("descGanho").value = "";
+        document.getElementById("valorGanho").value = "";
+        document.getElementById("tipoGanho").value = "";
+      } catch(e){
+        console.error(e);
+        alert("Erro ao salvar ganho. Abra o console (F12) para ver detalhes.");
+      }
+    }
 
+    // Delete ganho
     async function delGanho(id){
       if(!confirm("Excluir este ganho?")) return;
       await deleteDoc(doc(db, `users/${userUid}/income/${id}`));
@@ -802,7 +834,7 @@
       detalhe.style.display = "block";
     }
 
-    // Export CSV + PDF
+    // Export
     document.getElementById("btnPdf").addEventListener("click", ()=>window.print());
 
     document.getElementById("btnCsv").addEventListener("click", ()=>{
@@ -838,7 +870,6 @@
         csv += `${escCsv(dataBR(g.data))}${SEP}${escCsv(g.categoria)}${SEP}${escCsv(g.descricao)}${SEP}${escCsv(g.forma)}${SEP}${num(g.valor)}${EOL}`;
       }
       csv += `Total de gastos${SEP}${SEP}${SEP}${SEP}${num(totalGastos)}${EOL}${EOL}`;
-
       csv += `Saldo (ganhos - gastos)${SEP}${SEP}${SEP}${SEP}${num(saldo)}${EOL}`;
 
       const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
@@ -848,7 +879,7 @@
       a.click();
     });
 
-    // Auth flow init
+    // Auth
     async function init(){
       show(loginOverlay, true);
       setStatus("Sincronização: desconectada");
