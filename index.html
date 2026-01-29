@@ -6,7 +6,7 @@
   <title>Gastos</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:16px}
+    body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:16px}
     .container{max-width:760px;margin:0 auto}
     h1{color:#fff;text-align:center;margin:10px 0 14px}
     .status{display:flex;justify-content:space-between;align-items:center;color:#fff;font-size:12px;margin-bottom:10px}
@@ -355,22 +355,21 @@
       renderGanhos();
     }
 
-    // Criar PIN
+    // Criar PIN (regex corrigido: /^\d{4,8}$/)
     document.getElementById("btnSalvarPin").addEventListener("click", async ()=>{
       const p1 = (document.getElementById("pinNovo").value||"").trim();
       const p2 = (document.getElementById("pinNovo2").value||"").trim();
-      if(!/^\\d{4,8}$/.test(p1)){ pinMsg.textContent="PIN precisa ter 4 a 8 dígitos."; return; }
+      if(!/^\d{4,8}$/.test(p1)){ pinMsg.textContent="PIN precisa ter 4 a 8 dígitos."; return; }
       if(p1!==p2){ pinMsg.textContent="Os PINs não conferem."; return; }
 
       localStorage.setItem(PIN_HASH_KEY, await sha256Hex(p1));
       unlocked = true;
 
-      // destrava se já está logado; se não, só fecha o overlay
       if(userUid) unlockUI();
       else show(pinOverlay,false);
     });
 
-    // Entrar com PIN
+    // Entrar com PIN (regex corrigido: /^\d{4,8}$/)
     document.getElementById("btnDesbloquear").addEventListener("click", async ()=>{
       const pin = (document.getElementById("pinDigitado").value||"").trim();
       const hash = localStorage.getItem(PIN_HASH_KEY);
@@ -380,7 +379,7 @@
         pinMode("set");
         return;
       }
-      if(!/^\\d{4,8}$/.test(pin)){ pinMsg.textContent="PIN inválido."; return; }
+      if(!/^\d{4,8}$/.test(pin)){ pinMsg.textContent="PIN inválido."; return; }
 
       const calc = await sha256Hex(pin);
       if(calc !== hash){ pinMsg.textContent="PIN incorreto."; return; }
@@ -390,7 +389,7 @@
       else show(pinOverlay,false);
     });
 
-    // Limpar PIN local (para resolver “PIN errado” por sobra antiga)
+    // Limpar PIN local
     document.getElementById("btnLimparPin").addEventListener("click", async ()=>{
       if(!confirm("Remover o PIN salvo neste navegador? Você precisará criar um novo PIN.")) return;
       localStorage.removeItem(PIN_HASH_KEY);
@@ -399,7 +398,7 @@
       pinMsg.textContent = "PIN removido. Crie um novo PIN.";
     });
 
-    // Trocar PIN
+    // Trocar PIN (regex corrigido: /^\d{4,8}$/)
     btnChangePin.addEventListener("click", async ()=>{
       const hash = localStorage.getItem(PIN_HASH_KEY);
       if(!hash){ alert("Nenhum PIN definido."); await requirePin(); return; }
@@ -407,13 +406,13 @@
       const atual = prompt("Digite o PIN atual:");
       if(atual === null) return;
       const a = String(atual).trim();
-      if(!/^\\d{4,8}$/.test(a)){ alert("PIN inválido."); return; }
+      if(!/^\d{4,8}$/.test(a)){ alert("PIN inválido."); return; }
       if((await sha256Hex(a))!==hash){ alert("PIN atual incorreto."); return; }
 
       const n1 = prompt("Novo PIN (4 a 8 dígitos):");
       if(n1 === null) return;
       const b = String(n1).trim();
-      if(!/^\\d{4,8}$/.test(b)){ alert("Novo PIN inválido."); return; }
+      if(!/^\d{4,8}$/.test(b)){ alert("Novo PIN inválido."); return; }
 
       const n2 = prompt("Repita o novo PIN:");
       if(n2 === null) return;
@@ -437,13 +436,11 @@
       try{
         try{
           await reauthenticateWithPopup(user, provider);
-          // sucesso: limpa hash e manda criar novo
           localStorage.removeItem(PIN_HASH_KEY);
           unlocked = false;
           pinMode("set");
           pinMsg.textContent = "PIN removido. Crie um novo PIN.";
         } catch {
-          // fallback redirect
           sessionStorage.setItem(PENDING_PIN_RESET, "1");
           await reauthenticateWithRedirect(user, provider);
         }
@@ -820,8 +817,8 @@
       const saldo = totalGanhos - totalGastos;
 
       const SEP=";";
-      const EOL="\\r\\n";
-      const BOM="\\ufeff";
+      const EOL="\r\n";
+      const BOM="\ufeff";
       const escCsv = (s)=> `"${String(s??"").replaceAll('"','""')}"`;
       const num = (n)=> String(Number(n||0).toFixed(2)).replace(".",",");
 
@@ -856,10 +853,8 @@
       show(loginOverlay, true);
       setStatus("Sincronização: desconectada");
 
-      // consome redirects (login/reauth)
       try { await getRedirectResult(auth); } catch (_) {}
 
-      // se voltou de redirect do "Esqueci o PIN", e já está logado, libera o modo de criar PIN
       if(sessionStorage.getItem(PENDING_PIN_RESET)==="1"){
         sessionStorage.removeItem(PENDING_PIN_RESET);
         localStorage.removeItem(PIN_HASH_KEY);
@@ -885,7 +880,6 @@
         show(loginOverlay,false);
         startSync();
 
-        // Sempre pede PIN (ou cria, se não existir)
         await requirePin();
       });
     }
