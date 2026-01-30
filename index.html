@@ -6,30 +6,35 @@
   <title>Gastos</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:16px}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:16px;padding-bottom:84px}
     .container{max-width:760px;margin:0 auto}
-    h1{color:#fff;text-align:center;margin:10px 0 14px}
+
+    /* Topo com logo */
+    .brand{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 14px}
+    .brand img{height:42px;width:auto;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+    .brand h1{color:#fff;text-align:center;margin:0}
+
     .status{display:flex;justify-content:space-between;align-items:center;color:#fff;font-size:12px;margin-bottom:10px}
     .pill{background:#eef2ff;color:#273c75;font-weight:800;border-radius:999px;padding:6px 10px;display:inline-block}
     .status a{color:#fff;text-decoration:underline;cursor:pointer;margin-left:10px}
 
-    /* Tabulações */
+    /* Tabs */
     .tabs{
-      exibição:flex;
-      fundo:#000;
-      raio-da-borda:14px;
-      overflow:oculto;
-      margem-inferior:12px;
-      borda:1px sólida rgba(255,255,255,.15);
+      display:flex;
+      background:#000;
+      border-radius:14px;
+      overflow:hidden;
+      margin-bottom:12px;
+      border:1px solid rgba(255,255,255,.15);
     }
     .tab{
       flex:1;
-      borda:0;
-      fundo:#000;
-      cor:#fff;
-      preenchimento:12px;
-      peso da fonte: 900;
-      cursor:ponteiro;
+      border:0;
+      background:#000;
+      color:#fff;
+      padding:12px;
+      font-weight:900;
+      cursor:pointer;
     }
     .tab.active{background:#007AFF;color:#fff}
 
@@ -38,9 +43,9 @@
     label{display:block;font-weight:800;margin:12px 0 8px;color:#222}
     input,select{width:100%;padding:12px;border:2px solid #e1e5e9;border-radius:12px;font-size:16px}
     input:focus,select:focus{outline:none;border-color:#007AFF}
-    botão{largura:100%;borda:0;fundo:#007AFF;cor:#fff;preenchimento:12px 14px;raio da borda:12px;peso da fonte:900;tamanho da fonte:16px;cursor:ponteiro;margem superior:12px}
-    botão.secundário{fundo:#2c2c2e}
-    botão.perigo{fundo:#FF3B30}
+    button{width:100%;border:0;background:#007AFF;color:#fff;padding:12px 14px;border-radius:12px;font-weight:900;font-size:16px;cursor:pointer;margin-top:12px}
+    button.secondary{background:#2c2c2e}
+    button.danger{background:#FF3B30}
     .row{display:flex;gap:10px}
     .row>*{flex:1}
     .summary{background:#f2f2f7;border-radius:14px;padding:14px;text-align:center;margin:12px 0}
@@ -58,8 +63,8 @@
 
     /* Relatório detalhado */
     .cats{margin-top:12px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-    Detalhes do .cats{border-bottom:1px solid #eee}
-    Detalhes do .cats:último-filho{border-bottom:nenhum}
+    .cats details{border-bottom:1px solid #eee}
+    .cats details:last-child{border-bottom:none}
     .cats summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
     .cats summary::-webkit-details-marker{display:none}
     .cat-name{font-weight:900;color:#111}
@@ -72,7 +77,7 @@
     .cat-item .sub{font-size:12px;color:#666;margin-top:2px}
     .cat-item .val{font-weight:900;white-space:nowrap}
 
-    /* Sobreposições */
+    /* Overlays */
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:14px;z-index:9999}
     .overlay.show{display:flex}
     .modal{width:100%;max-width:560px;background:rgba(255,255,255,.98);border-radius:18px;padding:16px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
@@ -80,9 +85,20 @@
     .note{font-size:12px;color:#555;margin-top:8px;line-height:1.35}
     .msg{font-size:12px;color:#c0392b;font-weight:900;margin-top:8px;min-height:16px}
 
+    /* Barra fixa (rodapé) */
+    .promoBar{
+      position:fixed;left:0;right:0;bottom:0;z-index:9998;
+      padding:12px 14px;
+      background:rgba(0,0,0,.75);
+      backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      color:#fff;border-top:1px solid rgba(255,255,255,.15);
+      text-align:center;font-weight:800;font-size:13px;line-height:1.25
+    }
+    .promoBar a{color:#fff;text-decoration:underline;font-weight:900;white-space:nowrap}
+
     @media print{
-      corpo{fundo:#fff;preenchimento:0}
-      .tabs,.status,.overlay,.export{display:none!important}
+      body{background:#fff;padding:0}
+      .tabs,.status,.overlay,.export,.promoBar{display:none!important}
       .card{box-shadow:none}
       .card{display:block}
     }
@@ -93,34 +109,37 @@
     <div class="status">
       <div><span class="pill" id="syncStatus">Sincronização: desconectada</span></div>
       <div>
-        <a id="btnChangePin" style="display:none">PIN do Trocar</a>
+        <a id="btnChangePin" style="display:none">Trocar PIN</a>
         <a id="btnLogout" style="display:none">Sair</a>
       </div>
     </div>
 
-    <h1>Gastos</h1>
+    <div class="brand">
+      <img alt="Logo" src="./logo.png">
+      <h1>Vamos organizar?</h1>
+    </div>
 
     <div class="tabs">
       <button class="tab active" data-tab="gastos">Gastos</button>
       <button class="tab" data-tab="ganhos">Ganhos</button>
       <button class="tab" data-tab="lista">Lista</button>
-      <button class="tab" data-tab="relatório">Relatório</button>
+      <button class="tab" data-tab="relatorio">Relatório</button>
     </div>
 
     <!-- GASTOS -->
     <section id="gastos" class="card active">
-      <label>Dados</label>
+      <label>Data</label>
       <input type="date" id="data">
 
       <label>Categoria</label>
       <select id="categoria">
         <option value="">Selecione...</option>
-        <option>Alimentaço</option>
+        <option>Alimentação</option>
         <option>Transporte</option>
         <option>Mercado</option>
         <option>Contas</option>
-        <option>Laser</option>
-        <option>Comprar na internet</option>
+        <option>Lazer</option>
+        <option>Compra na internet</option>
         <option>Jogos</option>
         <option>Outros</option>
       </select>
@@ -131,7 +150,7 @@
       <label>Forma de pagamento</label>
       <select id="forma">
         <option value="">Selecione...</option>
-        <option>Pixel</option>
+        <option>Pix</option>
         <option>Crédito</option>
         <option>Débito</option>
         <option>Espécie</option>
@@ -145,7 +164,7 @@
 
     <!-- GANHOS -->
     <section id="ganhos" class="card">
-      <label>Dados</label>
+      <label>Data</label>
       <input type="date" id="dataGanho">
 
       <label>Tipo</label>
@@ -170,7 +189,7 @@
       </div>
 
       <div class="summary" id="sumGanhosLista" style="display:none">
-        <div>Total de ganhos (mais selecionados)</div>
+        <div>Total de ganhos (mês selecionado)</div>
         <div class="total" id="totalGanhosLista">R$ 0,00</div>
       </div>
 
@@ -182,7 +201,7 @@
     <section id="lista" class="card">
       <div class="filters">
         <select id="filtroMes"><option value="">Todos os meses</option></select>
-        <select id="filtroCat"><option value="">Todas as categorias</option></select>
+        <select id="filtroCat"><option value="">Todas categorias</option></select>
       </div>
 
       <div class="summary" id="sumLista" style="display:none">
@@ -197,11 +216,11 @@
     <!-- RELATÓRIO -->
     <section id="relatorio" class="card">
       <div class="filters">
-        <select id="relatorioMes"><option value="">Selecione um mÃªs</option></select>
+        <select id="relatorioMes"><option value="">Selecione um mês</option></select>
       </div>
 
       <div class="summary" id="sumRel" style="display:none">
-        <div>Total de mais (gastos)</div>
+        <div>Total do mês (gastos)</div>
         <div class="total" id="totalRel">R$ 0,00</div>
       </div>
 
@@ -218,12 +237,18 @@
       <div id="detalheCategorias" class="cats" style="display:none"></div>
 
       <div class="export" id="exportBtns" style="display:none">
-        <button id="btnPdf" type="button">ðŸ“„ Gerar PDF</button>
+        <button id="btnPdf" type="button">📄 Gerar PDF</button>
       </div>
 
       <div class="empty" id="emptyRel">Selecione um mês para ver o relatório.</div>
       <div class="note" id="infoRel" style="display:none;text-align:center"></div>
     </section>
+  </div>
+
+  <!-- Barra fixa final -->
+  <div class="promoBar">
+    Agora que você conseguiu economizar, vamos atualizar esse iphone?
+    <a href="https://www.macanamao.com.br" target="_blank" rel="noopener noreferrer">www.macanamao.com.br</a>
   </div>
 
   <!-- LOGIN -->
@@ -232,16 +257,16 @@
       <h2>Entrar para sincronizar</h2>
 
       <div class="row">
-        <button id="btnGoogle" type="button">Entrar no Google</button>
+        <button id="btnGoogle" type="button">Entrar com Google</button>
         <button class="secondary" id="btnToggleEmail" type="button">Email/senha</button>
       </div>
 
       <div id="emailBox" style="display:none;margin-top:12px">
-        <label>E-mail</label>
+        <label>Email</label>
         <input id="authEmail" type="email" autocomplete="email">
 
         <label>Senha</label>
-        <input id="authPass" type="password" autocomplete="senha-atual">
+        <input id="authPass" type="password" autocomplete="current-password">
 
         <div class="row">
           <button id="btnEntrar" type="button">Entrar</button>
@@ -257,7 +282,7 @@
   <!-- PIN -->
   <div class="overlay" id="pinOverlay">
     <div class="modal">
-      <h2>Fixar este navegador</h2>
+      <h2>PIN deste navegador</h2>
 
       <div id="pinSet" style="display:none">
         <label>Crie um PIN (4 a 8 dígitos)</label>
@@ -269,7 +294,7 @@
 
       <div id="pinEnter" style="display:none">
         <label>Digite seu PIN</label>
-        <input id="pinDigitado" inputmode="numeric" pattern="[0-9]*" placeholder="•••">
+        <input id="pinDigitado" inputmode="numeric" pattern="[0-9]*" placeholder="••••">
         <button id="btnDesbloquear" type="button">Desbloquear</button>
       </div>
 
@@ -279,7 +304,7 @@
       </div>
 
       <div class="msg" id="pinMsg"></div>
-      <div class="note">Para redefinir o PIN, você precisa confirmar sua conta do Google.</div>
+      <div class="note">Para resetar o PIN, você precisa confirmar sua conta Google.</div>
     </div>
   </div>
 
@@ -287,19 +312,19 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    importar {
-      obterAuth, onAuthStateChanged,
-      Entrar com e-mail e senha, criar usuário com e-mail e senha,
+    import {
+      getAuth, onAuthStateChanged,
+      signInWithEmailAndPassword, createUserWithEmailAndPassword,
       signInWithPopup, signInWithRedirect, getRedirectResult,
-      Provedor de autenticação do Google,
-      reautenticarComPopup, reautenticarComRedirecionamento,
-      sair
-    } de "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    importar {
-      getFirestore, coleção, documento,
-      adicionarDoc, excluirDoc,
-      onSnapshot, consulta, ordenarPor
-    } de "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      GoogleAuthProvider,
+      reauthenticateWithPopup, reauthenticateWithRedirect,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import {
+      getFirestore, collection, doc,
+      addDoc, deleteDoc,
+      onSnapshot, query, orderBy
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAIKbBCn96YbinrRHkDcpvZ4OY7j9Z_ES8",
@@ -316,17 +341,17 @@
 
     // Estado
     let userUid = null;
-    seja gastos = [];
-    seja ganhos = [];
-    seja unsub = nulo;
-    seja unsubGanhos = nulo;
-    desbloqueado = falso;
+    let gastos = [];
+    let ganhos = [];
+    let unsub = null;
+    let unsubGanhos = null;
+    let unlocked = false;
 
-    // Chaves de armazenamento
+    // Storage keys
     const PIN_HASH_KEY = "pinHash_v1";
     const PENDING_PIN_RESET = "pendingPinReset_v1";
 
-    // Referências da interface do usuário
+    // UI refs
     const syncStatus = document.getElementById("syncStatus");
     const btnLogout = document.getElementById("btnLogout");
     const btnChangePin = document.getElementById("btnChangePin");
@@ -335,14 +360,14 @@
     const authMsg = document.getElementById("authMsg");
     const pinMsg = document.getElementById("pinMsg");
 
-    // Valores padrão
+    // Defaults
     document.getElementById("data").value = new Date().toISOString().slice(0,10);
     document.getElementById("dataGanho").value = new Date().toISOString().slice(0,10);
 
     function setStatus(t){ syncStatus.textContent = t; }
     function show(el, on){ el.classList.toggle("show", !!on); }
 
-    // Abas
+    // Tabs
     const tabs = [...document.querySelectorAll(".tab")];
     const cards = [...document.querySelectorAll(".card")];
     tabs.forEach(t => t.addEventListener("click", () => {
@@ -351,33 +376,42 @@
       const id = t.dataset.tab;
       cards.forEach(c => c.classList.toggle("active", c.id === id));
       if (id === "lista") renderLista();
-      if (id === "relatório") renderRelatório();
+      if (id === "relatorio") renderRelatorio();
       if (id === "ganhos") renderGanhos();
     }));
 
-    // Ajudantes
+    // Helpers
     const moeda = (v)=> new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(Number(v)||0);
     const anoMes = (d)=> (d && d.length>=7) ? d.slice(0,7) : "";
     const dataBR = (d)=> new Date(String(d)+"T00:00:00").toLocaleDateString("pt-BR");
-    const esc = (s)=> String(s??"").replaceAll("&","&").replaceAll("<","<").replaceAll(">",">").replaceAll('"',""").replaceAll("'","'");
+    const esc = (s)=> String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
     function soma(arr){ return arr.reduce((t,g)=>t+(Number(g.valor)||0),0); }
 
+    // Exibir mês como Jan/2026 (mantendo value 2026-01)
+    function mesLabel(ym){
+      if(!ym || ym.length < 7) return ym || "";
+      const [y, m] = ym.split("-");
+      const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+      const mi = Math.max(1, Math.min(12, Number(m))) - 1;
+      return `${meses[mi]}/${y}`;
+    }
+
     // número robusto
-    função parseBRL(v){
+    function parseBRL(v){
       const s = String(v||"").trim().replace(/\s+/g,"");
       if(!s) return 0;
       const norm = s.replace(/\./g,"").replace(",",".");
       const n = parseFloat(norm);
-      retornar Number.isFinite(n) ? n : 0;
+      return Number.isFinite(n) ? n : 0;
     }
 
-    função assíncrona sha256Hex(str){
+    async function sha256Hex(str){
       const enc = new TextEncoder().encode(str);
       const buf = await crypto.subtle.digest("SHA-256", enc);
-      retornar [...novo Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+      return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
     }
 
-    função pinMode(modo){
+    function pinMode(mode){
       document.getElementById("pinSet").style.display = (mode==="set") ? "block" : "none";
       document.getElementById("pinEnter").style.display = (mode==="enter") ? "block" : "none";
       pinMsg.textContent = "";
@@ -386,77 +420,77 @@
       document.getElementById("pinDigitado").value = "";
     }
 
-    função assíncrona requirePin(){
+    async function requirePin(){
       const has = !!localStorage.getItem(PIN_HASH_KEY);
-      mostrar(pinOverlay, verdadeiro);
+      show(pinOverlay, true);
       pinMode(has ? "enter" : "set");
     }
 
-    função unlockUI(){
-      mostrar(loginOverlay,falso);
-      mostrar(pinOverlay,falso);
+    function unlockUI(){
+      show(loginOverlay,false);
+      show(pinOverlay,false);
       btnLogout.style.display = "inline";
       btnChangePin.style.display = "inline";
       setStatus("Sincronização: ativa");
-      atualizarSeleções();
-      renderizarLista();
-      renderRelatório();
+      refreshSelects();
+      renderLista();
+      renderRelatorio();
       renderGanhos();
     }
 
-    // Conjunto de PIN
+    // PIN set
     document.getElementById("btnSalvarPin").addEventListener("click", async ()=>{
       const p1 = (document.getElementById("pinNovo").value||"").trim();
       const p2 = (document.getElementById("pinNovo2").value||"").trim();
       if(!/^\d{4,8}$/.test(p1)){ pinMsg.textContent="PIN precisa ter 4 a 8 dígitos."; return; }
-      if(p1!==p2){ pinMsg.textContent="Os PINs não conferem."; retornar; }
+      if(p1!==p2){ pinMsg.textContent="Os PINs não conferem."; return; }
       localStorage.setItem(PIN_HASH_KEY, await sha256Hex(p1));
-      desbloqueado = verdadeiro;
-      se(userUid) desbloquearUI();
-      senão mostrar(pinOverlay,falso);
+      unlocked = true;
+      if(userUid) unlockUI();
+      else show(pinOverlay,false);
     });
 
-    // Digite o PIN
+    // PIN enter
     document.getElementById("btnDesbloquear").addEventListener("click", async ()=>{
       const pin = (document.getElementById("pinDigitado").value||"").trim();
       const hash = localStorage.getItem(PIN_HASH_KEY);
-      if(!hash){ pinMsg.textContent="Nenhum PIN definido. Crie um PIN."; pinMode("configurar"); retornar; }
+      if(!hash){ pinMsg.textContent="Nenhum PIN definido. Crie um PIN."; pinMode("set"); return; }
       if(!/^\d{4,8}$/.test(pin)){ pinMsg.textContent="PIN inválido."; return; }
       if((await sha256Hex(pin))!==hash){ pinMsg.textContent="PIN incorreto."; return; }
-      desbloqueado = verdadeiro;
-      se(userUid) desbloquearUI();
-      senão mostrar(pinOverlay,falso);
+      unlocked = true;
+      if(userUid) unlockUI();
+      else show(pinOverlay,false);
     });
 
     // Limpar PIN local
     document.getElementById("btnLimparPin").addEventListener("click", async ()=>{
-      if(!confirm("Remover o PIN salvo neste navegador? Você precisa criar um novo PIN.")) return;
+      if(!confirm("Remover o PIN salvo neste navegador? Você precisará criar um novo PIN.")) return;
       localStorage.removeItem(PIN_HASH_KEY);
-      desbloqueado = falso;
-      pinMode("definido");
+      unlocked = false;
+      pinMode("set");
       pinMsg.textContent = "PIN removido. Crie um novo PIN.";
     });
 
-    // Pino de troca
+    // Trocar PIN
     btnChangePin.addEventListener("click", async ()=>{
       const hash = localStorage.getItem(PIN_HASH_KEY);
       if(!hash){ alert("Nenhum PIN definido."); await requirePin(); return; }
 
-      const atual = prompt("Dígito ou PIN atual:");
-      se (real === nulo) retorne;
+      const atual = prompt("Digite o PIN atual:");
+      if(atual === null) return;
       const a = String(atual).trim();
       if(!/^\d{4,8}$/.test(a)){ alert("PIN inválido."); return; }
-      if((await sha256Hex(a))!==hash){ alert("PIN atual incorreto."); retornar; }
+      if((await sha256Hex(a))!==hash){ alert("PIN atual incorreto."); return; }
 
       const n1 = prompt("Novo PIN (4 a 8 dígitos):");
-      se (n1 === nulo) retorne;
+      if(n1 === null) return;
       const b = String(n1).trim();
       if(!/^\d{4,8}$/.test(b)){ alert("Novo PIN inválido."); return; }
 
       const n2 = prompt("Repita o novo PIN:");
-      se (n2 === nulo) retorne;
+      if(n2 === null) return;
       const c = String(n2).trim();
-      if(b!==c){ alert("Os PINs não conferem."); retornar; }
+      if(b!==c){ alert("Os PINs não conferem."); return; }
 
       localStorage.setItem(PIN_HASH_KEY, await sha256Hex(b));
       alert("PIN alterado com sucesso neste navegador.");
@@ -465,23 +499,23 @@
     // Esqueci o PIN
     document.getElementById("btnEsqueciPin").addEventListener("click", async ()=>{
       pinMsg.textContent = "";
-      if(!confirm("Para redefinir o PIN, confirme sua conta Google. Continuar?")) return;
+      if(!confirm("Para resetar o PIN, confirme sua conta Google. Continuar?")) return;
 
       const user = auth.currentUser;
-      if(!user){ pinMsg.textContent="Você não está logado."; retornar; }
+      if(!user){ pinMsg.textContent="Você não está logado."; return; }
 
       const provider = new GoogleAuthProvider();
 
-      tentar{
-        tentar{
-          aguardar reautenticarComPopup(usuário, provedor);
+      try{
+        try{
+          await reauthenticateWithPopup(user, provider);
           localStorage.removeItem(PIN_HASH_KEY);
-          desbloqueado = falso;
-          pinMode("definido");
+          unlocked = false;
+          pinMode("set");
           pinMsg.textContent = "PIN removido. Crie um novo PIN.";
-        } pegar {
+        } catch {
           sessionStorage.setItem(PENDING_PIN_RESET, "1");
-          aguardar reautenticarComRedirecionamento(usuário, provedor);
+          await reauthenticateWithRedirect(user, provider);
         }
       } catch (e){
         console.error(e);
@@ -489,13 +523,13 @@
       }
     });
 
-    // Interface de login
+    // Login UI
     document.getElementById("btnToggleEmail").addEventListener("click", ()=>{
       const box = document.getElementById("emailBox");
       box.style.display = (box.style.display==="none") ? "block" : "none";
     });
 
-    função authError(e){
+    function authError(e){
       authMsg.textContent = (e && e.message) ? e.message : "Erro ao autenticar.";
     }
 
@@ -518,35 +552,35 @@
     document.getElementById("btnGoogle").addEventListener("click", async ()=>{
       authMsg.textContent = "";
       const provider = new GoogleAuthProvider();
-      tentar{
-        aguardar signInWithPopup(auth, provedor);
+      try{
+        await signInWithPopup(auth, provider);
       } catch (e){
-        tente { aguarde signInWithRedirect(auth, provider); }
+        try{ await signInWithRedirect(auth, provider); }
         catch(e2){ authError(e2); }
       }
     });
 
     btnLogout.addEventListener("click", async ()=>{
       if(!confirm("Sair e bloquear este navegador?")) return;
-      desbloqueado = falso;
-      if(unsub){ unsub(); unsub=nulo; }
+      unlocked = false;
+      if(unsub){ unsub(); unsub=null; }
       if(unsubGanhos){ unsubGanhos(); unsubGanhos=null; }
-      aguardar signOut(auth);
-      btnLogout.style.display = "nenhum";
-      btnChangePin.style.display = "nenhum";
+      await signOut(auth);
+      btnLogout.style.display = "none";
+      btnChangePin.style.display = "none";
       setStatus("Sincronização: desconectada");
-      mostrar(loginOverlay,true);
-      mostrar(pinOverlay,falso);
+      show(loginOverlay,true);
+      show(pinOverlay,false);
     });
 
     // Firestore
     function expensesCol(){ return collection(db, `users/${userUid}/expenses`); }
     function incomeCol(){ return collection(db, `users/${userUid}/income`); }
 
-    função iniciarSincronização(){
-      Se (!userUid) retornar;
+    function startSync(){
+      if(!userUid) return;
 
-      if(unsub){ unsub(); unsub=nulo; }
+      if(unsub){ unsub(); unsub=null; }
       if(unsubGanhos){ unsubGanhos(); unsubGanhos=null; }
 
       setStatus("Sincronização: preparando...");
@@ -554,14 +588,14 @@
       const q1 = query(expensesCol(), orderBy("data","desc"));
       unsub = onSnapshot(q1, (snap)=>{
         gastos = snap.docs.map(d=>({id:d.id, ...d.data()}));
-        se(desbloqueado) {
+        if(unlocked) {
           setStatus("Sincronização: ativa");
-          atualizarSeleções();
-          renderizarLista();
-          renderRelatório();
+          refreshSelects();
+          renderLista();
+          renderRelatorio();
           renderGanhos();
         }
-      }, (erro)=>{
+      }, (err)=>{
         console.error(err);
         setStatus("Sincronização: erro");
       });
@@ -569,13 +603,13 @@
       const q2 = query(incomeCol(), orderBy("data","desc"));
       unsubGanhos = onSnapshot(q2, (snap)=>{
         ganhos = snap.docs.map(d=>({id:d.id, ...d.data()}));
-        se(desbloqueado) {
+        if(unlocked) {
           setStatus("Sincronização: ativa");
-          atualizarSeleções();
-          renderRelatório();
+          refreshSelects();
+          renderRelatorio();
           renderGanhos();
         }
-      }, (erro)=>{
+      }, (err)=>{
         console.error(err);
         setStatus("Sincronização: erro");
       });
@@ -583,51 +617,51 @@
 
     // CRUD - GASTOS
     document.getElementById("btnSalvar").addEventListener("click", async ()=>{
-      if(!userUid){ alert("Faça login para salvar."); retornar; }
-      if(!unlocked){ alert("Desbloqueio com PIN."); retornar; }
+      if(!userUid){ alert("Faça login para salvar."); return; }
+      if(!unlocked){ alert("Desbloqueie com PIN."); return; }
 
       const data = document.getElementById("data").value;
       const categoria = document.getElementById("categoria").value;
-      const descrição = (document.getElementById("descricao").value||"").trim();
+      const descricao = (document.getElementById("descricao").value||"").trim();
       const forma = (document.getElementById("forma").value||"").trim();
-      const valor = parseBRL(document.getElementById("valor").valor);
+      const valor = parseBRL(document.getElementById("valor").value);
 
-      if(!categoria || valor<=0){ alert("Categoria e valor são obrigatórios."); retornar; }
+      if(!categoria || valor<=0){ alert("Categoria e valor são obrigatórios."); return; }
 
-      await addDoc(expensesCol(), { dados, categoria, descrição, forma, valor, anoMes: anoMes(dados) });
+      await addDoc(expensesCol(), { data, categoria, descricao, forma, valor, anoMes: anoMes(data) });
 
       document.getElementById("descricao").value = "";
       document.getElementById("valor").value = "";
       document.getElementById("forma").value = "";
     });
 
-    função assíncrona del(id){
+    async function del(id){
       if(!confirm("Excluir este gasto?")) return;
       await deleteDoc(doc(db, `users/${userUid}/expenses/${id}`));
     }
-    janela.__del = del;
+    window.__del = del;
 
-    // ADICIONAR GANHO
-    janela.__adicionarGanho = função assíncrona(){
-      tentar{
-        if(!userUid){ alert("Faça login para salvar."); retornar; }
-        if(!unlocked){ alert("Desbloqueio com PIN."); retornar; }
+    // ADD GANHO
+    window.__addGanho = async function(){
+      try{
+        if(!userUid){ alert("Faça login para salvar."); return; }
+        if(!unlocked){ alert("Desbloqueie com PIN."); return; }
 
         const data = document.getElementById("dataGanho").value;
         const tipo = document.getElementById("tipoGanho").value;
-        const descrição = (document.getElementById("descGanho").value||"").trim();
-        const valor = parseBRL(document.getElementById("valorGanho").valor);
+        const descricao = (document.getElementById("descGanho").value||"").trim();
+        const valor = parseBRL(document.getElementById("valorGanho").value);
 
-        se(!tipo || valor<=0){
+        if(!tipo || valor<=0){
           alert("Tipo e valor são obrigatórios (valor maior que 0).");
-          retornar;
+          return;
         }
 
-        await addDoc(incomeCol(), { data, tipo, descrição, valor, anoMes: anoMes(data) });
+        await addDoc(incomeCol(), { data, tipo, descricao, valor, anoMes: anoMes(data) });
 
-        const m = anoMes(dados);
+        const m = anoMes(data);
         const sel = document.getElementById("ganhosMes");
-        se(sel) sel.valor = m;
+        if(sel) sel.value = m;
 
         document.getElementById("descGanho").value = "";
         document.getElementById("valorGanho").value = "";
@@ -638,25 +672,25 @@
       }
     }
 
-    // Excluir ganho
-    função assíncrona delGanho(id){
+    // Delete ganho
+    async function delGanho(id){
       if(!confirm("Excluir este ganho?")) return;
       await deleteDoc(doc(db, `users/${userUid}/income/${id}`));
     }
-    janela.__delGanho = delGanho;
+    window.__delGanho = delGanho;
 
-    // Seleciona + filtros
+    // Selects + filtros
     const filtroMes = document.getElementById("filtroMes");
-    const FiltroCat = document.getElementById("filtroCat");
+    const filtroCat = document.getElementById("filtroCat");
     const relMes = document.getElementById("relatorioMes");
     const ganhosMes = document.getElementById("ganhosMes");
 
-    filtroMes.addEventListener("change", renderList);
+    filtroMes.addEventListener("change", renderLista);
     filtroCat.addEventListener("change", renderLista);
     relMes.addEventListener("change", renderRelatorio);
-    ganhosMes.addEventListener("alterar", renderGanhos);
+    ganhosMes.addEventListener("change", renderGanhos);
 
-    função refreshSelects(){
+    function refreshSelects(){
       const mesesGastos = gastos.map(g=>g.anoMes).filter(Boolean);
       const mesesGanhos = ganhos.map(g=>g.anoMes).filter(Boolean);
       const meses = [...new Set([...mesesGastos, ...mesesGanhos])].sort().reverse();
@@ -664,11 +698,11 @@
       const cats = [...new Set(gastos.map(g=>g.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
 
       const keepFM = filtroMes.value;
-      const keepFC = FiltroCat.value;
+      const keepFC = filtroCat.value;
       const keepRM = relMes.value;
 
-      filtroMes.innerHTML = `<option value="">Todos os meses</option>` + meses.map(m=>`<option value="${m}">${m}</option>`).join("");
-      relMes.innerHTML = `<option value="">Selecione um mÃªs</option>` + meses.map(m=>`<option value="${m}">${m}</option>`).join("");
+      filtroMes.innerHTML = `<option value="">Todos os meses</option>` + meses.map(m=>`<option value="${m}">${mesLabel(m)}</option>`).join("");
+      relMes.innerHTML = `<option value="">Selecione um mês</option>` + meses.map(m=>`<option value="${m}">${mesLabel(m)}</option>`).join("");
       filtroCat.innerHTML = `<option value="">Todas categorias</option>` + cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
 
       filtroMes.value = meses.includes(keepFM) ? keepFM : "";
@@ -676,79 +710,79 @@
       relMes.value = meses.includes(keepRM) ? keepRM : "";
 
       const mesesSomenteGanhos = [...new Set(mesesGanhos)].sort().reverse();
-      const keepGM = ganhosMes.valor;
+      const keepGM = ganhosMes.value;
 
       ganhosMes.innerHTML =
         `<option value="">Todos os meses</option>` +
-        mesesSomenteGanhos.map(m=>`<option value="${m}">${m}</option>`).join("");
+        mesesSomenteGanhos.map(m=>`<option value="${m}">${mesLabel(m)}</option>`).join("");
 
       ganhosMes.value = mesesSomenteGanhos.includes(keepGM) ? keepGM : (mesesSomenteGanhos[0] || "");
     }
 
     // Lista render (gastos)
-    função renderizarLista(){
+    function renderLista(){
       const el = document.getElementById("listaGastos");
       const empty = document.getElementById("emptyLista");
       const sumBox = document.getElementById("sumLista");
       const totalEl = document.getElementById("totalLista");
 
-      const m = filtroMes.valor;
-      const c = FiltroCat.value;
+      const m = filtroMes.value;
+      const c = filtroCat.value;
 
       const vis = gastos.filter(g => (!m || g.anoMes===m) && (!c || g.categoria===c))
                         .sort((a,b)=>String(b.data).localeCompare(String(a.data)));
 
-      se(!vis.length){
+      if(!vis.length){
         el.innerHTML = "";
-        empty.style.display = "bloco";
-        sumBox.style.display = "nenhum";
-        retornar;
+        empty.style.display = "block";
+        sumBox.style.display = "none";
+        return;
       }
 
-      empty.style.display = "nenhum";
-      sumBox.style.display = "bloco";
+      empty.style.display = "none";
+      sumBox.style.display = "block";
       totalEl.textContent = moeda(soma(vis));
 
       el.innerHTML = vis.map(g=>`
         <div class="item">
           <div class="it-left">
             <div class="it-title">${esc(g.descricao || g.categoria || "")}</div>
-            <div class="it-sub">${dataBR(g.data)} â€¢ ${esc(g.categoria||"")} ${g.forma?("â€¢ "+esc(g.forma)):""}</div>
+            <div class="it-sub">${dataBR(g.data)} • ${esc(g.categoria||"")} ${g.forma?("• "+esc(g.forma)):""}</div>
           </div>
           <div style="display:flex;gap:10px;align-items:center">
             <div class="it-val">${moeda(g.valor)}</div>
-            <button class="danger" style="width:auto;padding:8px 10px;margin:0" onclick="__del('${g.id}')">ðŸ—'ï¸ </button>
+            <button class="danger" style="width:auto;padding:8px 10px;margin:0" onclick="__del('${g.id}')">🗑️</button>
           </div>
         </div>
       `).join("");
     }
 
     // Lista render (ganhos)
-    função renderGanhos(){
+    function renderGanhos(){
       const box = document.getElementById("listaGanhos");
       const empty = document.getElementById("emptyGanhos");
       const sumBox = document.getElementById("sumGanhosLista");
       const totalEl = document.getElementById("totalGanhosLista");
       if(!box || !empty) return;
 
-      const mes = ganhosMes.valor || "";
+      const mes = ganhosMes.value || "";
 
       const vis = ganhos
         .filter(g => (!mes || g.anoMes === mes))
-        .fatiar()
+        .slice()
         .sort((a,b)=>String(b.data).localeCompare(String(a.data)));
 
-      se(!vis.length){
+      if(!vis.length){
         box.innerHTML = "";
-        empty.style.display = "bloco";
+        empty.style.display = "block";
         if(sumBox) sumBox.style.display = "none";
-        retornar;
+        return;
       }
 
-      empty.style.display = "nenhum";
+      empty.style.display = "none";
 
-      se(sumBox && totalEl){
-        sumBox.style.display = "bloco";
+      if(sumBox && totalEl){
+        sumBox.style.display = "block";
         totalEl.textContent = moeda(soma(vis));
       }
 
@@ -760,14 +794,14 @@
           </div>
           <div style="display:flex;gap:10px;align-items:center">
             <div class="it-val">${moeda(g.valor)}</div>
-            <button class="danger" style="width:auto;padding:8px 10px;margin:0" onclick="__delGanho('${g.id}')">ðŸ—'ï¸ </button>
+            <button class="danger" style="width:auto;padding:8px 10px;margin:0" onclick="__delGanho('${g.id}')">🗑️</button>
           </div>
         </div>
       `).join("");
     }
 
-    // Renderização Relatório
-    função renderRelatório(){
+    // Relatório render
+    function renderRelatorio(){
       const mes = relMes.value;
       const sumRel = document.getElementById("sumRel");
       const totalRel = document.getElementById("totalRel");
@@ -781,60 +815,60 @@
       const sumSaldo = document.getElementById("sumSaldo");
       const saldoEl = document.getElementById("saldoMes");
 
-      se(!mes){
-        sumRel.style.display = "nenhum";
-        detalhe.style.display = "nenhum";
-        exportBtns.style.display = "nenhum";
-        info.style.display = "nenhum";
-        empty.style.display = "bloco";
+      if(!mes){
+        sumRel.style.display = "none";
+        detalhe.style.display = "none";
+        exportBtns.style.display = "none";
+        info.style.display = "none";
+        empty.style.display = "block";
 
-        sumGanhos.style.display = "nenhum";
-        sumSaldo.style.display = "nenhum";
-        retornar;
+        sumGanhos.style.display = "none";
+        sumSaldo.style.display = "none";
+        return;
       }
 
       const arr = gastos.filter(g=>g.anoMes===mes);
       const total = soma(arr);
       totalRel.textContent = moeda(total);
-      sumRel.style.display = "bloco";
-      empty.style.display = "nenhum";
+      sumRel.style.display = "block";
+      empty.style.display = "none";
 
       const arrGanhos = ganhos.filter(g=>g.anoMes===mes);
       const totalGanhos = soma(arrGanhos);
       totalGanhosEl.textContent = moeda(totalGanhos);
-      sumGanhos.style.display = "bloco";
+      sumGanhos.style.display = "block";
 
       const saldo = totalGanhos - total;
       saldoEl.textContent = moeda(saldo);
-      sumSaldo.style.display = "bloco";
+      sumSaldo.style.display = "block";
 
-      se(!total && !totalGanhos){
-        detalhe.style.display = "nenhum";
-        exportBtns.style.display = "nenhum";
-        info.style.display = "nenhum";
-        retornar;
+      if(!total && !totalGanhos){
+        detalhe.style.display = "none";
+        exportBtns.style.display = "none";
+        info.style.display = "none";
+        return;
       }
 
       exportBtns.style.display = "flex";
-      info.textContent = `Mês: ${mes} â€¢ Gastos: ${arr.length} â€¢ Ganhos: ${arrGanhos.length}`;
-      info.style.display = "bloco";
+      info.textContent = `Mês: ${mesLabel(mes)} • Gastos: ${arr.length} • Ganhos: ${arrGanhos.length}`;
+      info.style.display = "block";
 
-      se(!total){
-        detalhe.style.display = "nenhum";
-        retornar;
+      if(!total){
+        detalhe.style.display = "none";
+        return;
       }
 
       const map = {};
-      para(const g de arr){
-        const gato = g.categoria || “Outros”;
+      for(const g of arr){
+        const cat = g.categoria || "Outros";
         const v = Number(g.valor)||0;
         if(!map[cat]) map[cat] = {cat,total:0,itens:[],qtd:0,min:v,max:v};
-        mapa[gato].total += v;
+        map[cat].total += v;
         map[cat].qtd += 1;
         map[cat].min = Math.min(map[cat].min, v);
         map[cat].max = Math.max(map[cat].max, v);
         map[cat].itens.push({
-          dados: g.dados || "",
+          data: g.data || "",
           desc: (g.descricao && String(g.descricao).trim()) ? String(g.descricao).trim() : "(sem descrição)",
           forma: g.forma || "",
           valor: v
@@ -842,7 +876,7 @@
       }
 
       const cats = Object.values(map).sort((a,b)=>b.total-a.total);
-      gatos.paraCada(c=>{
+      cats.forEach(c=>{
         c.itens.sort((a,b)=>String(b.data).localeCompare(String(a.data)) || (b.valor-a.valor));
       });
 
@@ -860,12 +894,12 @@
           </div>
         `).join("");
 
-        retornar `
-          <detalhes>
+        return `
+          <details>
             <summary>
               <div>
                 <div class="cat-name">${esc(c.cat)}</div>
-                <div class="cat-meta">Qtd: ${c.qtd} â€¢ MÃ©dia: ${moeda(media)} â€¢ Menor: ${moeda(c.min)} â€¢ Maior: ${moeda(c.max)}</div>
+                <div class="cat-meta">Qtd: ${c.qtd} • Média: ${moeda(media)} • Menor: ${moeda(c.min)} • Maior: ${moeda(c.max)}</div>
               </div>
               <div>
                 <div class="cat-total">${moeda(c.total)}</div>
@@ -875,15 +909,15 @@
             <div class="cat-items">${itens}</div>
           </details>
         `;
-      }).juntar("");
+      }).join("");
 
-      detalhe.style.display = "bloco";
+      detalhe.style.display = "block";
     }
 
     // ===== GERAR PDF DETALHADO (CORRIGIDO) =====
     document.getElementById("btnPdf").addEventListener("click", async ()=>{
       const mes = relMes.value;
-      if(!mes){ alert("Selecione um mais."); retornar; }
+      if(!mes){ alert("Selecione um mês."); return; }
 
       const arrGastos = gastos.filter(g=>g.anoMes===mes).sort((a,b)=>String(a.data).localeCompare(String(b.data)));
       const arrGanhos = ganhos.filter(g=>g.anoMes===mes).sort((a,b)=>String(a.data).localeCompare(String(b.data)));
@@ -894,16 +928,16 @@
 
       // Mapa de categorias
       const map = {};
-      para (const g de arrGastos){
-        const gato = g.categoria || “Outros”;
+      for(const g of arrGastos){
+        const cat = g.categoria || "Outros";
         const v = Number(g.valor)||0;
         if(!map[cat]) map[cat] = {cat,total:0,itens:[],qtd:0,min:v,max:v};
-        mapa[gato].total += v;
+        map[cat].total += v;
         map[cat].qtd += 1;
         map[cat].min = Math.min(map[cat].min, v);
         map[cat].max = Math.max(map[cat].max, v);
         map[cat].itens.push({
-          dados: g.dados || "",
+          data: g.data || "",
           desc: (g.descricao && String(g.descricao).trim()) ? String(g.descricao).trim() : "(sem descrição)",
           forma: g.forma || "",
           valor: v
@@ -911,38 +945,38 @@
       }
 
       const cats = Object.values(map).sort((a,b)=>b.total-a.total);
-      gatos.paraCada(c=>{
+      cats.forEach(c=>{
         c.itens.sort((a,b)=>String(b.data).localeCompare(String(a.data)));
       });
 
       // HTML do relatório
       let html = `
         <style>
-          * { margem: 0; preenchimento: 0; }
-          corpo { família de fontes: Arial, sans-serif; cor: #333; altura da linha: 1,6; }
-          .pdf-page { preenchimento: 20px; fundo: branco; }
-          h1 { alinhamento de texto: centro; cor: #1a1a1a; borda inferior: 3px sólida #007AFF; preenchimento inferior: 10px; margem inferior: 20px; tamanho da fonte: 28px; }
+          * { margin: 0; padding: 0; }
+          body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; }
+          .pdf-page { padding: 20px; background: white; }
+          h1 { text-align: center; color: #1a1a1a; border-bottom: 3px solid #007AFF; padding-bottom: 10px; margin-bottom: 20px; font-size: 28px; }
           h2 { color: #007AFF; border-left: 4px solid #007AFF; padding-left: 10px; margin-top: 25px; margin-bottom: 15px; font-size: 18px; }
           .header-info { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-around; text-align: center; }
           .info-box { flex: 1; }
           .info-label { font-size: 11px; color: #666; text-transform: uppercase; font-weight: bold; }
-          .info-value { tamanho da fonte: 18px; peso da fonte: negrito; cor: #007AFF; margem superior: 5px; }
+          .info-value { font-size: 18px; font-weight: bold; color: #007AFF; margin-top: 5px; }
           .info-value.danger { color: #FF3B30; }
           .info-value.success { color: #34C759; }
-          tabela { largura: 100%; recolhimento da borda: recolhimento; margem: 15px 0; tamanho da fonte: 12px; }
+          table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
           th { background: #007AFF; color: white; padding: 10px; text-align: left; font-weight: bold; }
           td { padding: 8px 10px; border-bottom: 1px solid #ddd; }
           tr:nth-child(even) { background: #f9f9f9; }
           .total-row { background: #e3f2fd; font-weight: bold; }
           .category-section { margin-top: 20px; break-inside: avoid; }
           .category-header { background: #f0f0f0; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; font-size: 13px; }
-          .nome-do-gato { peso-da-fonte: negrito; cor: #1a1a1a; }
-          .cat-stats { tamanho da fonte: 11px; cor: #666; }
+          .cat-name { font-weight: bold; color: #1a1a1a; }
+          .cat-stats { font-size: 11px; color: #666; }
           .cat-total { font-weight: bold; color: #007AFF; }
-          .cat-pct { tamanho da fonte: 11px; cor: #999; }
+          .cat-pct { font-size: 11px; color: #999; }
           .item-row { padding: 8px 15px; background: white; border-left: 3px solid #ddd; margin-bottom: 5px; display: flex; justify-content: space-between; font-size: 12px; }
           .item-desc { flex: 1; }
-          .item-date { tamanho da fonte: 11px; cor: #999; margem superior: 2px; }
+          .item-date { font-size: 11px; color: #999; margin-top: 2px; }
           .item-val { font-weight: bold; color: #333; white-space: nowrap; }
           .summary-grid { display: flex; gap: 15px; margin: 25px 0; }
           .summary-card { flex: 1; background: #f5f5f5; padding: 15px; border-radius: 8px; text-align: center; }
@@ -951,12 +985,12 @@
           .summary-value.danger { color: #FF3B30; }
           .summary-value.success { color: #34C759; }
           .footer { margin-top: 30px; padding-top: 15px; border-top: 2px solid #e0e0e0; text-align: center; font-size: 11px; color: #999; }
-          .logo { alinhamento de texto: centro; margem inferior: 15px; tamanho da fonte: 20px; peso da fonte: negrito; cor: #007AFF; }
+          .logo { text-align: center; margin-bottom: 15px; font-size: 20px; font-weight: bold; color: #007AFF; }
         </style>
 
         <div class="pdf-page">
-          <div class="logo">ðŸ'° Relatório de Gastos</div>
-          <h1>Extrato Financeiro - ${mes}</h1>
+          <div class="logo">💰 Relatório de Gastos</div>
+          <h1>Extrato Financeiro - ${mesLabel(mes)}</h1>
 
           <div class="header-info">
             <div class="info-box">
@@ -965,7 +999,7 @@
             </div>
             <div class="info-box">
               <div class="info-label">Total de Gastos</div>
-              <div class="info-value perigo">${moeda(totalGastos)}</div>
+              <div class="info-value danger">${moeda(totalGastos)}</div>
             </div>
             <div class="info-box">
               <div class="info-label">Saldo</div>
@@ -975,11 +1009,11 @@
 
           ${arrGanhos.length > 0 ? `
           <section>
-            <h2>ðŸ“¥ ENTRADAS (Ganhos)</h2>
+            <h2>📥 ENTRADAS (Ganhos)</h2>
             <table>
               <thead>
                 <tr>
-                  <th>Dados</th>
+                  <th>Data</th>
                   <th>Tipo</th>
                   <th>Descrição</th>
                   <th style="text-align: right;">Valor</th>
@@ -990,12 +1024,12 @@
                   <tr>
                     <td>${dataBR(g.data)}</td>
                     <td>${esc(g.tipo)}</td>
-                    <td>${esc(g.descricao || "â—")}</td>
+                    <td>${esc(g.descricao || "—")}</td>
                     <td style="text-align: right; font-weight: bold; color: #34C759;">${moeda(g.valor)}</td>
                   </tr>
                 `).join("")}
                 <tr class="total-row">
-                  <td colspan="3" style="text-align: right;">TOTAL DE ENTRADAS:</td>
+                  <td colspan="3" style="text-align: right;">TOTAL ENTRADAS:</td>
                   <td style="text-align: right; color: #34C759;">${moeda(totalGanhos)}</td>
                 </tr>
               </tbody>
@@ -1004,11 +1038,11 @@
           ` : ""}
 
           <section>
-            <h2>ðŸ“¤ SAÃ DAS (Gastos)</h2>
+            <h2>📤 SAÍDAS (Gastos)</h2>
             <table>
               <thead>
                 <tr>
-                  <th>Dados</th>
+                  <th>Data</th>
                   <th>Categoria</th>
                   <th>Descrição</th>
                   <th>Pagamento</th>
@@ -1020,8 +1054,8 @@
                   <tr>
                     <td>${dataBR(g.data)}</td>
                     <td>${esc(g.categoria)}</td>
-                    <td>${esc(g.descricao || "â—")}</td>
-                    <td>${esc(g.forma || "â—")}</td>
+                    <td>${esc(g.descricao || "—")}</td>
+                    <td>${esc(g.forma || "—")}</td>
                     <td style="text-align: right; font-weight: bold; color: #FF3B30;">${moeda(g.valor)}</td>
                   </tr>
                 `).join("")}
@@ -1034,16 +1068,16 @@
           </section>
 
           <section>
-            <h2>ðŸ“Š ANÃ LISE POR CATEGORIA</h2>
+            <h2>📊 ANÁLISE POR CATEGORIA</h2>
             ${cats.map(c=>{
               const pct = totalGastos ? (c.total/totalGastos*100) : 0;
               const media = c.qtd ? (c.total/c.qtd) : 0;
-              retornar `
+              return `
                 <div class="category-section">
                   <div class="category-header">
                     <div>
                       <div class="cat-name">${esc(c.cat)}</div>
-                      <div class="cat-stats">Transações: ${c.qtd} | Mídia: ${moeda(media)} | Mínimo: ${moeda(c.min)} | Máx.: ${moeda(c.max)}</div>
+                      <div class="cat-stats">Transações: ${c.qtd} | Média: ${moeda(media)} | Min: ${moeda(c.min)} | Max: ${moeda(c.max)}</div>
                     </div>
                     <div>
                       <div class="cat-total">${moeda(c.total)}</div>
@@ -1061,91 +1095,87 @@
                   `).join("")}
                 </div>
               `;
-            }).juntar("")}
+            }).join("")}
           </section>
 
           <div class="summary-grid">
             <div class="summary-card">
-              <div class="summary-title">ðŸ'µ Total de Ganhos</div>
+              <div class="summary-title">💵 Total de Ganhos</div>
               <div class="summary-value success">${moeda(totalGanhos)}</div>
             </div>
             <div class="summary-card">
-              <div class="summary-title">ðŸ'¸ Total de Gastos</div>
+              <div class="summary-title">💸 Total de Gastos</div>
               <div class="summary-value danger">${moeda(totalGastos)}</div>
             </div>
             <div class="summary-card">
-              <div class="summary-title">ðŸ“ˆ Saldo</div>
+              <div class="summary-title">📈 Saldo</div>
               <div class="summary-value ${saldo >= 0 ? 'success' : 'danger'}">${moeda(saldo)}</div>
             </div>
           </div>
 
           <div class="footer">
-            <p>Relatório gerado em ${new Date().toLocaleDateString("pt-BR")} em ${new Date().toLocaleTimeString("pt-BR")}</p>
+            <p>Relatório gerado em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR")}</p>
             <p>Sistema de Controle de Gastos Pessoais</p>
           </div>
         </div>
       `;
 
-      // Cria elemento temporário
       const tempDiv = document.createElement("div");
       tempDiv.innerHTML = html;
       document.body.appendChild(tempDiv);
 
-      // Aguardar um pouco para garantir a renderização
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Gerar PDF
-      const opt ​​= {
-        margem: [5, 5, 5, 5],
-        nome do arquivo: `Relatório_${mes}.pdf`,
-        imagem: { tipo: 'jpeg', qualidade: 0,98 },
+      const opt = {
+        margin: [5, 5, 5, 5],
+        filename: `Relatorio_${mes}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      tentar {
+      try {
         await html2pdf().set(opt).from(tempDiv).save();
       } catch (e) {
         console.error("Erro ao gerar PDF:", e);
         alert("Erro ao gerar PDF. Abra o console (F12) para detalhes.");
       }
 
-      // Remove elemento temporário
       document.body.removeChild(tempDiv);
     });
 
-    // Autenticação
-    função assíncrona init(){
-      mostrar(loginOverlay, verdadeiro);
+    // Auth
+    async function init(){
+      show(loginOverlay, true);
       setStatus("Sincronização: desconectada");
 
-      tente {await getRedirectResult(auth); } pegar (_) {}
+      try { await getRedirectResult(auth); } catch (_) {}
 
       if(sessionStorage.getItem(PENDING_PIN_RESET)==="1"){
         sessionStorage.removeItem(PENDING_PIN_RESET);
         localStorage.removeItem(PIN_HASH_KEY);
-        desbloqueado = falso;
-        mostrar(pinOverlay,verdadeiro);
-        pinMode("definido");
+        unlocked = false;
+        show(pinOverlay,true);
+        pinMode("set");
       }
 
       onAuthStateChanged(auth, async (user)=>{
-        se(!usuário){
-          userUid = nulo;
-          desbloqueado = falso;
-          if(unsub){ unsub(); unsub=nulo; }
+        if(!user){
+          userUid = null;
+          unlocked = false;
+          if(unsub){ unsub(); unsub=null; }
           if(unsubGanhos){ unsubGanhos(); unsubGanhos=null; }
-          btnLogout.style.display = "nenhum";
-          btnChangePin.style.display = "nenhum";
+          btnLogout.style.display = "none";
+          btnChangePin.style.display = "none";
           setStatus("Sincronização: desconectada");
-          mostrar(loginOverlay,true);
-          retornar;
+          show(loginOverlay,true);
+          return;
         }
 
         userUid = user.uid;
-        mostrar(loginOverlay,falso);
-        iniciarSincronização();
-        aguarde requirePin();
+        show(loginOverlay,false);
+        startSync();
+        await requirePin();
       });
     }
 
