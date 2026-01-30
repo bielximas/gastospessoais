@@ -2,35 +2,49 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gastos</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:16px}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      min-height:100vh;
+      padding:16px;
+      padding-bottom:84px; /* espaço para a barra fixa */
+    }
     .container{max-width:760px;margin:0 auto}
-    h1{color:#fff;text-align:center;margin:10px 0 14px}
+
+    /* TOP BRAND */
+    .brand{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      margin:10px 0 14px;
+    }
+    .brand img{
+      height:42px;
+      width:auto;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(0,0,0,.18);
+    }
+    .brand h1{
+      color:#fff;
+      text-align:center;
+      margin:0;
+      font-size:34px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+
     .status{display:flex;justify-content:space-between;align-items:center;color:#fff;font-size:12px;margin-bottom:10px}
     .pill{background:#eef2ff;color:#273c75;font-weight:800;border-radius:999px;padding:6px 10px;display:inline-block}
     .status a{color:#fff;text-decoration:underline;cursor:pointer;margin-left:10px}
 
     /* Tabs */
-    .tabs{
-      display:flex;
-      background:#000;
-      border-radius:14px;
-      overflow:hidden;
-      margin-bottom:12px;
-      border:1px solid rgba(255,255,255,.15);
-    }
-    .tab{
-      flex:1;
-      border:0;
-      background:#000;
-      color:#fff;
-      padding:12px;
-      font-weight:900;
-      cursor:pointer;
-    }
+    .tabs{display:flex;background:#000;border-radius:14px;overflow:hidden;margin-bottom:12px;border:1px solid rgba(255,255,255,.15)}
+    .tab{flex:1;border:0;background:#000;color:#fff;padding:12px;font-weight:900;cursor:pointer}
     .tab.active{background:#007AFF;color:#fff}
 
     .card{background:rgba(255,255,255,.95);border-radius:18px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none}
@@ -46,6 +60,7 @@
     .summary{background:#f2f2f7;border-radius:14px;padding:14px;text-align:center;margin:12px 0}
     .total{font-size:26px;font-weight:900;color:#FF3B30}
     .empty{color:#666;text-align:center;padding:26px 10px}
+
     .item{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;gap:10px;align-items:center}
     .it-left{min-width:0;flex:1}
     .it-title{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -80,9 +95,32 @@
     .note{font-size:12px;color:#555;margin-top:8px;line-height:1.35}
     .msg{font-size:12px;color:#c0392b;font-weight:900;margin-top:8px;min-height:16px}
 
+    /* BARRA FIXA (rodapé) */
+    .promoBar{
+      position:fixed;
+      left:0; right:0; bottom:0;
+      z-index:9998;
+      padding:12px 14px;
+      background:rgba(0,0,0,.75);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color:#fff;
+      border-top:1px solid rgba(255,255,255,.15);
+      text-align:center;
+      font-weight:800;
+      font-size:13px;
+      line-height:1.25;
+    }
+    .promoBar a{
+      color:#fff;
+      text-decoration:underline;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
     @media print{
       body{background:#fff;padding:0}
-      .tabs,.status,.overlay,.export{display:none!important}
+      .tabs,.status,.overlay,.export,.promoBar{display:none!important}
       .card{box-shadow:none}
       .card{display:block}
     }
@@ -98,7 +136,12 @@
       </div>
     </div>
 
-    <h1>Gastos</h1>
+    <!-- TÍTULO COM LOGO -->
+    <div class="brand">
+      <img alt="Logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAKACAYAAADqyMAiAAAACXBIWXMAAC4jAAAuIwF4pT92AAAgAElEQVR4nOydB5wUxfLHR9/lBHfHcXdkEATJKip/QTGhqKionAkVxawPEXN4iOHpE8xZzOGZs2AOiDkg5oyiomJCBBHlqcx/fr1TS+3czOykvdudre/n05+Du92Znu6erurqqmpNEwRBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEAQhbqzRQkUQBEEQhAzChe6aRvmHWQosZc1WqNuaZuH1oPqtyYooDYIgCIJggQS7nXAPJDR1XVdCuWfPnsWjR48u23jjjSurq6vbGL9ra5TqqqqqmsbGxnYNDQ11PXr0aN+9e/d6/MT/8XvjMzX4LL5j/L4Nvj906NBS43eFTU1N/zCuH1SYr6E5KwqiIAiCIAixw7p6p5JW6M2ePbsAQrimpqZjp06d+tfW1m5m/HsXQ4gfapQp5eXl0woLCy8z/n13RUXFM2VlZS+XlJS8seaaa775j3/846Pi4uKvjf//aHxmyRprrLHUuOQyFOPfv7KynP/f/MxS4/tLi4qKfja+/53x8wvjmu8WFBS8YdzjFeP/Txj/vs+45y3GtS9q06bN2UZdjjbqtl9lZeX2Xbp0GWbUuxeUi969e1fiOTy2k+82EgRBEIRsgIQYmeVdTfMjR44sN1bdXerq6ga3a9dutCHIDzcE6XRDcP/XEKyPQ+Aa5Uuj/GEIZ92uGJdp9WJXL0OBWGU8w1Kj7gsMheENozyG5zKUhulQYIzn3bZt27YDO3bs2AmWijTtSgoUWQ9EMRAEQRBaBdrXJqHkKJAOPvjgMkPA9zSE3QhjpXwAVu3GqvpuQzi+ZAjHT42C1XaKMNXsBe0qs/xtlL+M8qdR/meWP83f/WX+nZdVERR+vb9Y+ZPd/092/1UOz5BSjGdfZZQlxvN/bLTHi6Wlpbcb7XO6oSCMq66uHta1a9duU6dOLXLpB/JBIKVAFANBEAQhMrgTHgmbZmBvvEePHl0MIb+Fsco9pKys7FJj1TvbEG6fGWUZF/I2xSpc7QSqJ6GaRcVOYeHP9ZfbM8GCYJQlhoLwsaEwPQbLSGVl5b7t27cfusEGG9S69Be3wIhCIAiCIPiCm5ybCZG77rrrH2uvvXZ3Q9iPMQT9KcbK9U5jBfvhmmuuCUG/ymEVb10957Jwj1JJsLMsUNukfB7tarTxX0Yb/4RtBaPdbzIUg2Nqamq26tu3b4ODg6LVSiAIgiAISbgDWoqQgFe9IezhNT/CWIEeW1xcfKshfN4zBNHvDvvwEFxxWMG3duHWA25BSGlHUymAxWCZ0S+vG0rB1UZfHW702QZwQPTT14IgCEL8cRQC8Fivr6/vXl1dvVtJScklhlCZU1BQ8LMp7K1CHAKK9sCzVtA7ORCS8HT7e2vX3abY+UGkWAvouYx+W2gobA/Dr6CmpmZk165d7awEfCwIgiAIMYPv4acIAJjzO3Xq1NMQ+HuWlZVdZQj8ecZq8jdT+HFhjn9zgdMiwp4LanOlq4oh3FSh/5Mgb8n68HrY1aUFlQjqi7+01QpZSt+hHkYdFxcWFj5fUVFxXtu2bUf37t27g81YsR0ngiAIQu7AvfT577SePXvWQQAYK8NzDYE/1xBay20EPq0wfXm2+ylWYUoClYRoFPfAdUpLS/U2bdroxipYb9eunV5fX683NjbqhuKjd+nSRe/YsaP6P36PvxvKkPp8SUlJJALcDAtMURRaQEkgSwFtHaRYCUwLwWKj/58xFIIpyLEwYsSICj5OTChhkSAIgpDF2Jpzscpv3779QOzhG0LtSUMALbYIWFo9pvVOD1LshLxXAW8IKL2qqkoJ6sGDB+tbbLGF3tTUpB9yyCH6iSeeqJ999tn65Zdfrv/3v//VZ86cqc+ZM0d//fXX9XfeeUf/9NNP9S+//FL/+uuv9e+++07//vvv9R9//FH/6aef9J9//llfsmSJ/ssvv6ifixcvVr/H3/E5fH7hwoX6ggUL9A8++EB/44039BdffFF/8skn9XvvvVe/7rrr9AsvvFCfOnWqPnnyZP2AAw5Q9dpyyy31gQMH6g0NDXpZWZmeJvohWazKQVQKkKVY+5krBAhJ/Nqo823GONkfIYg240t8BwRBELIIEvopqzSksK2rq9vamNDPN4ToO4Zg+cuyyqfVoa3HedBCq11uDnf6LP7etm1bvWfPnkpw7rvvvkqoX3zxxfqdd96phPknn3yihPWKFSv0v/76S88F/vzzT3358uX6okWL9Lffflt//PHH9RtuuEEpK0cccYQ+ZswYfciQIcoCUV5e7tqevC1RIrQWWH0JkmPA7MMVxcXFL1RUVJzaoUOHdQ1Fx5rNUPwGBEEQWolmQr9Pnz61CM0rLS29obCwcKFF4NMePu0Ph17l81W9m6CHkOvRo4e++eab64cffrh+0UUX6ffdd5/+2muv6d9++63+999/exauq1atUooAhOz//vc/9ZMKfk8F13QruI61pPsOvz7dE3WgeuD3uI5Xfv/9d2WleOaZZ/..."
+      />
+      <h1>Vamos organizar?</h1>
+    </div>
 
     <div class="tabs">
       <button class="tab active" data-tab="gastos">Gastos</button>
@@ -110,7 +153,7 @@
     <!-- GASTOS -->
     <section id="gastos" class="card active">
       <label>Data</label>
-      <input type="date" id="data">
+      <input type="date" id="data" />
 
       <label>Categoria</label>
       <select id="categoria">
@@ -126,7 +169,7 @@
       </select>
 
       <label>Descrição</label>
-      <input id="descricao" placeholder="Ex: cerveja, churrasco...">
+      <input id="descricao" placeholder="Ex: cerveja, churrasco..." />
 
       <label>Forma de pagamento</label>
       <select id="forma">
@@ -138,7 +181,7 @@
       </select>
 
       <label>Valor (R$)</label>
-      <input type="text" id="valor" inputmode="decimal" placeholder="0,00">
+      <input type="text" id="valor" inputmode="decimal" placeholder="0,00" />
 
       <button id="btnSalvar" type="button">Salvar gasto</button>
     </section>
@@ -146,7 +189,7 @@
     <!-- GANHOS -->
     <section id="ganhos" class="card">
       <label>Data</label>
-      <input type="date" id="dataGanho">
+      <input type="date" id="dataGanho" />
 
       <label>Tipo</label>
       <select id="tipoGanho">
@@ -158,12 +201,12 @@
       </select>
 
       <label>Descrição</label>
-      <input id="descGanho" placeholder="Ex: salário, venda iPhone, manutenção...">
+      <input id="descGanho" placeholder="Ex: salário, venda iPhone, manutenção..." />
 
       <label>Valor (R$)</label>
-      <input type="text" id="valorGanho" inputmode="decimal" placeholder="0,00">
+      <input type="text" id="valorGanho" inputmode="decimal" placeholder="0,00" />
 
-      <button id="btnSalvarGanho" type="button" onclick="__addGanho()">Salvar ganho</button>
+      <button id="btnSalvarGanho" type="button" onclick="addGanho()">Salvar ganho</button>
 
       <div class="filters" style="margin-top:12px">
         <select id="ganhosMes"><option value="">Todos os meses</option></select>
@@ -186,7 +229,7 @@
       </div>
 
       <div class="summary" id="sumLista" style="display:none">
-        <div>Total selecionado</div>
+        <div>Total (selecionado)</div>
         <div class="total" id="totalLista">R$ 0,00</div>
       </div>
 
@@ -218,69 +261,73 @@
       <div id="detalheCategorias" class="cats" style="display:none"></div>
 
       <div class="export" id="exportBtns" style="display:none">
-        <button id="btnPdf" type="button">📄 Gerar PDF</button>
+        <button id="btnPdf" type="button">Gerar PDF</button>
       </div>
 
       <div class="empty" id="emptyRel">Selecione um mês para ver o relatório.</div>
       <div class="note" id="infoRel" style="display:none;text-align:center"></div>
     </section>
-  </div>
 
-  <!-- LOGIN -->
-  <div class="overlay" id="loginOverlay">
-    <div class="modal">
-      <h2>Entrar para sincronizar</h2>
-
-      <div class="row">
-        <button id="btnGoogle" type="button">Entrar com Google</button>
-        <button class="secondary" id="btnToggleEmail" type="button">Email/senha</button>
-      </div>
-
-      <div id="emailBox" style="display:none;margin-top:12px">
-        <label>Email</label>
-        <input id="authEmail" type="email" autocomplete="email">
-
-        <label>Senha</label>
-        <input id="authPass" type="password" autocomplete="current-password">
-
+    <!-- LOGIN -->
+    <div class="overlay" id="loginOverlay">
+      <div class="modal">
+        <h2>Entrar para sincronizar</h2>
         <div class="row">
-          <button id="btnEntrar" type="button">Entrar</button>
-          <button class="secondary" id="btnCriar" type="button">Criar conta</button>
+          <button id="btnGoogle" type="button">Entrar com Google</button>
+          <button class="secondary" id="btnToggleEmail" type="button">Email/senha</button>
         </div>
-      </div>
 
-      <div class="msg" id="authMsg"></div>
-      <div class="note">Depois do login, você cria/digita um PIN para travar este navegador.</div>
+        <div id="emailBox" style="display:none;margin-top:12px">
+          <label>Email</label>
+          <input id="authEmail" type="email" autocomplete="email" />
+          <label>Senha</label>
+          <input id="authPass" type="password" autocomplete="current-password" />
+          <div class="row">
+            <button id="btnEntrar" type="button">Entrar</button>
+            <button class="secondary" id="btnCriar" type="button">Criar conta</button>
+          </div>
+        </div>
+
+        <div class="msg" id="authMsg"></div>
+        <div class="note">Depois do login, você cria/digita um PIN para travar este navegador.</div>
+      </div>
     </div>
-  </div>
 
-  <!-- PIN -->
-  <div class="overlay" id="pinOverlay">
-    <div class="modal">
-      <h2>PIN deste navegador</h2>
+    <!-- PIN -->
+    <div class="overlay" id="pinOverlay">
+      <div class="modal">
+        <h2>PIN deste navegador</h2>
 
-      <div id="pinSet" style="display:none">
-        <label>Crie um PIN (4 a 8 dígitos)</label>
-        <input id="pinNovo" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 1234">
-        <label style="margin-top:10px">Repita o PIN</label>
-        <input id="pinNovo2" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 1234">
-        <button id="btnSalvarPin" type="button">Salvar PIN</button>
+        <div id="pinSet" style="display:none">
+          <label>Crie um PIN (4 a 8 dígitos)</label>
+          <input id="pinNovo" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 1234" />
+          <label style="margin-top:10px">Repita o PIN</label>
+          <input id="pinNovo2" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 1234" />
+          <button id="btnSalvarPin" type="button">Salvar PIN</button>
+        </div>
+
+        <div id="pinEnter" style="display:none">
+          <label>Digite seu PIN</label>
+          <input id="pinDigitado" inputmode="numeric" pattern="[0-9]*" placeholder="" />
+          <button id="btnDesbloquear" type="button">Desbloquear</button>
+
+          <div class="row" style="margin-top:10px">
+            <button class="danger" id="btnEsqueciPin" type="button">Esqueci o PIN</button>
+            <button class="secondary" id="btnLimparPin" type="button">Limpar PIN deste navegador</button>
+          </div>
+        </div>
+
+        <div class="msg" id="pinMsg"></div>
+        <div class="note">Para resetar o PIN, você precisa confirmar sua conta Google.</div>
       </div>
-
-      <div id="pinEnter" style="display:none">
-        <label>Digite seu PIN</label>
-        <input id="pinDigitado" inputmode="numeric" pattern="[0-9]*" placeholder="••••">
-        <button id="btnDesbloquear" type="button">Desbloquear</button>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <button class="danger" id="btnEsqueciPin" type="button">Esqueci o PIN</button>
-        <button class="secondary" id="btnLimparPin" type="button">Limpar PIN deste navegador</button>
-      </div>
-
-      <div class="msg" id="pinMsg"></div>
-      <div class="note">Para resetar o PIN, você precisa confirmar sua conta Google.</div>
     </div>
+
+  </div><!-- /container -->
+
+  <!-- BARRA FIXA NO FIM -->
+  <div class="promoBar">
+    Agora que você conseguiu economizar, vamos atualizar esse iphone?&nbsp;
+    <a href="https://www.macanamao.com.br" target="_blank" rel="noopener noreferrer">www.macanamao.com.br</a>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -288,21 +335,17 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import {
-      getAuth, onAuthStateChanged,
-      signInWithEmailAndPassword, createUserWithEmailAndPassword,
-      signInWithPopup, signInWithRedirect, getRedirectResult,
-      GoogleAuthProvider,
-      reauthenticateWithPopup, reauthenticateWithRedirect,
-      signOut
+      getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+      signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider,
+      reauthenticateWithPopup, reauthenticateWithRedirect, signOut
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import {
-      getFirestore, collection, doc,
-      addDoc, deleteDoc,
-      onSnapshot, query, orderBy
+      getFirestore, collection, doc, addDoc, deleteDoc, onSnapshot, query, orderBy
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+    // --- Firebase config ---
     const firebaseConfig = {
-      apiKey: "AIzaSyAIKbBCn96YbinrRHkDcpvZ4OY7j9Z_ES8",
+      apiKey: "AIzaSyAIKbBCn96YbinrRHkDcpvZ4OY7j9ZES8",
       authDomain: "gastos-pessoais-a716a.firebaseapp.com",
       projectId: "gastos-pessoais-a716a",
       storageBucket: "gastos-pessoais-a716a.firebasestorage.app",
@@ -323,8 +366,8 @@
     let unlocked = false;
 
     // Storage keys
-    const PIN_HASH_KEY = "pinHash_v1";
-    const PENDING_PIN_RESET = "pendingPinReset_v1";
+    const PINHASHKEY = "pinHashv1";
+    const PENDINGPINRESET = "pendingPinResetv1";
 
     // UI refs
     const syncStatus = document.getElementById("syncStatus");
@@ -346,25 +389,24 @@
     const tabs = [...document.querySelectorAll(".tab")];
     const cards = [...document.querySelectorAll(".card")];
     tabs.forEach(t => t.addEventListener("click", () => {
-      tabs.forEach(x=>x.classList.remove("active"));
+      tabs.forEach(x => x.classList.remove("active"));
       t.classList.add("active");
       const id = t.dataset.tab;
       cards.forEach(c => c.classList.toggle("active", c.id === id));
-      if (id === "lista") renderLista();
-      if (id === "relatorio") renderRelatorio();
-      if (id === "ganhos") renderGanhos();
+      if(id === "lista") renderLista();
+      if(id === "relatorio") renderRelatorio();
+      if(id === "ganhos") renderGanhos();
     }));
 
     // Helpers
-    const moeda = (v)=> new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(Number(v)||0);
-    const anoMes = (d)=> (d && d.length>=7) ? d.slice(0,7) : "";
-    const dataBR = (d)=> new Date(String(d)+"T00:00:00").toLocaleDateString("pt-BR");
-    const esc = (s)=> String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-    function soma(arr){ return arr.reduce((t,g)=>t+(Number(g.valor)||0),0); }
+    const moeda = v => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(Number(v||0));
+    const anoMes = d => d && d.length >= 7 ? d.slice(0,7) : "";
+    const dataBR = d => new Date(String(d)+"T00:00:00").toLocaleDateString("pt-BR");
+    const esc = s => String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    const soma = arr => arr.reduce((t,g)=> t + (Number(g.valor)||0), 0);
 
-    // número robusto
     function parseBRL(v){
-      const s = String(v||"").trim().replace(/\s+/g,"");
+      const s = String(v||"").trim().replace(/\s/g,"");
       if(!s) return 0;
       const norm = s.replace(/\./g,"").replace(",",".");
       const n = parseFloat(norm);
@@ -374,12 +416,22 @@
     async function sha256Hex(str){
       const enc = new TextEncoder().encode(str);
       const buf = await crypto.subtle.digest("SHA-256", enc);
-      return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+      return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,"0")).join("");
+    }
+
+    // --- NOVO: label de mês tipo Jan/2026 ---
+    function mesLabel(ym){
+      // ym: "YYYY-MM"
+      if(!ym || ym.length < 7) return ym || "";
+      const [y, m] = ym.split("-");
+      const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+      const mi = Math.max(1, Math.min(12, Number(m))) - 1;
+      return `${meses[mi]}/${y}`;
     }
 
     function pinMode(mode){
-      document.getElementById("pinSet").style.display = (mode==="set") ? "block" : "none";
-      document.getElementById("pinEnter").style.display = (mode==="enter") ? "block" : "none";
+      document.getElementById("pinSet").style.display = mode === "set" ? "block" : "none";
+      document.getElementById("pinEnter").style.display = mode === "enter" ? "block" : "none";
       pinMsg.textContent = "";
       document.getElementById("pinNovo").value = "";
       document.getElementById("pinNovo2").value = "";
@@ -387,7 +439,7 @@
     }
 
     async function requirePin(){
-      const has = !!localStorage.getItem(PIN_HASH_KEY);
+      const has = !!localStorage.getItem(PINHASHKEY);
       show(pinOverlay, true);
       pinMode(has ? "enter" : "set");
     }
@@ -405,65 +457,61 @@
     }
 
     // PIN set
-    document.getElementById("btnSalvarPin").addEventListener("click", async ()=>{
-      const p1 = (document.getElementById("pinNovo").value||"").trim();
-      const p2 = (document.getElementById("pinNovo2").value||"").trim();
+    document.getElementById("btnSalvarPin").addEventListener("click", async () => {
+      const p1 = document.getElementById("pinNovo").value.trim();
+      const p2 = document.getElementById("pinNovo2").value.trim();
       if(!/^\d{4,8}$/.test(p1)){ pinMsg.textContent="PIN precisa ter 4 a 8 dígitos."; return; }
-      if(p1!==p2){ pinMsg.textContent="Os PINs não conferem."; return; }
-      localStorage.setItem(PIN_HASH_KEY, await sha256Hex(p1));
+      if(p1 !== p2){ pinMsg.textContent="Os PINs não conferem."; return; }
+      localStorage.setItem(PINHASHKEY, await sha256Hex(p1));
       unlocked = true;
       if(userUid) unlockUI();
       else show(pinOverlay,false);
     });
 
     // PIN enter
-    document.getElementById("btnDesbloquear").addEventListener("click", async ()=>{
-      const pin = (document.getElementById("pinDigitado").value||"").trim();
-      const hash = localStorage.getItem(PIN_HASH_KEY);
+    document.getElementById("btnDesbloquear").addEventListener("click", async () => {
+      const pin = document.getElementById("pinDigitado").value.trim();
+      const hash = localStorage.getItem(PINHASHKEY);
       if(!hash){ pinMsg.textContent="Nenhum PIN definido. Crie um PIN."; pinMode("set"); return; }
       if(!/^\d{4,8}$/.test(pin)){ pinMsg.textContent="PIN inválido."; return; }
-      if((await sha256Hex(pin))!==hash){ pinMsg.textContent="PIN incorreto."; return; }
+      if(await sha256Hex(pin) !== hash){ pinMsg.textContent="PIN incorreto."; return; }
       unlocked = true;
       if(userUid) unlockUI();
       else show(pinOverlay,false);
     });
 
     // Limpar PIN local
-    document.getElementById("btnLimparPin").addEventListener("click", async ()=>{
+    document.getElementById("btnLimparPin").addEventListener("click", async () => {
       if(!confirm("Remover o PIN salvo neste navegador? Você precisará criar um novo PIN.")) return;
-      localStorage.removeItem(PIN_HASH_KEY);
+      localStorage.removeItem(PINHASHKEY);
       unlocked = false;
       pinMode("set");
       pinMsg.textContent = "PIN removido. Crie um novo PIN.";
     });
 
     // Trocar PIN
-    btnChangePin.addEventListener("click", async ()=>{
-      const hash = localStorage.getItem(PIN_HASH_KEY);
+    btnChangePin.addEventListener("click", async () => {
+      const hash = localStorage.getItem(PINHASHKEY);
       if(!hash){ alert("Nenhum PIN definido."); await requirePin(); return; }
-
-      const atual = prompt("Digite o PIN atual:");
+      const atual = prompt("Digite o PIN atual");
       if(atual === null) return;
       const a = String(atual).trim();
       if(!/^\d{4,8}$/.test(a)){ alert("PIN inválido."); return; }
-      if((await sha256Hex(a))!==hash){ alert("PIN atual incorreto."); return; }
-
-      const n1 = prompt("Novo PIN (4 a 8 dígitos):");
+      if(await sha256Hex(a) !== hash){ alert("PIN atual incorreto."); return; }
+      const n1 = prompt("Novo PIN (4 a 8 dígitos)");
       if(n1 === null) return;
       const b = String(n1).trim();
       if(!/^\d{4,8}$/.test(b)){ alert("Novo PIN inválido."); return; }
-
-      const n2 = prompt("Repita o novo PIN:");
+      const n2 = prompt("Repita o novo PIN");
       if(n2 === null) return;
       const c = String(n2).trim();
-      if(b!==c){ alert("Os PINs não conferem."); return; }
-
-      localStorage.setItem(PIN_HASH_KEY, await sha256Hex(b));
+      if(b !== c){ alert("Os PINs não conferem."); return; }
+      localStorage.setItem(PINHASHKEY, await sha256Hex(b));
       alert("PIN alterado com sucesso neste navegador.");
     });
 
     // Esqueci o PIN
-    document.getElementById("btnEsqueciPin").addEventListener("click", async ()=>{
+    document.getElementById("btnEsqueciPin").addEventListener("click", async () => {
       pinMsg.textContent = "";
       if(!confirm("Para resetar o PIN, confirme sua conta Google. Continuar?")) return;
 
@@ -471,62 +519,57 @@
       if(!user){ pinMsg.textContent="Você não está logado."; return; }
 
       const provider = new GoogleAuthProvider();
-
       try{
         try{
           await reauthenticateWithPopup(user, provider);
-          localStorage.removeItem(PIN_HASH_KEY);
+          localStorage.removeItem(PINHASHKEY);
           unlocked = false;
           pinMode("set");
           pinMsg.textContent = "PIN removido. Crie um novo PIN.";
-        } catch {
-          sessionStorage.setItem(PENDING_PIN_RESET, "1");
+        }catch{
+          sessionStorage.setItem(PENDINGPINRESET, "1");
           await reauthenticateWithRedirect(user, provider);
         }
-      } catch (e){
+      }catch(e){
         console.error(e);
         pinMsg.textContent = "Não foi possível confirmar sua conta Google.";
       }
     });
 
     // Login UI
-    document.getElementById("btnToggleEmail").addEventListener("click", ()=>{
+    document.getElementById("btnToggleEmail").addEventListener("click", () => {
       const box = document.getElementById("emailBox");
-      box.style.display = (box.style.display==="none") ? "block" : "none";
+      box.style.display = (box.style.display === "none" || !box.style.display) ? "block" : "none";
     });
+    function authError(e){ authMsg.textContent = (e && e.message) ? e.message : "Erro ao autenticar."; }
 
-    function authError(e){
-      authMsg.textContent = (e && e.message) ? e.message : "Erro ao autenticar.";
-    }
-
-    document.getElementById("btnEntrar").addEventListener("click", async ()=>{
+    document.getElementById("btnEntrar").addEventListener("click", async () => {
       authMsg.textContent = "";
-      const email = (document.getElementById("authEmail").value||"").trim();
-      const pass = (document.getElementById("authPass").value||"").trim();
+      const email = document.getElementById("authEmail").value.trim();
+      const pass = document.getElementById("authPass").value.trim();
       try{ await signInWithEmailAndPassword(auth, email, pass); }
       catch(e){ authError(e); }
     });
 
-    document.getElementById("btnCriar").addEventListener("click", async ()=>{
+    document.getElementById("btnCriar").addEventListener("click", async () => {
       authMsg.textContent = "";
-      const email = (document.getElementById("authEmail").value||"").trim();
-      const pass = (document.getElementById("authPass").value||"").trim();
+      const email = document.getElementById("authEmail").value.trim();
+      const pass = document.getElementById("authPass").value.trim();
       try{ await createUserWithEmailAndPassword(auth, email, pass); }
       catch(e){ authError(e); }
     });
 
-    document.getElementById("btnGoogle").addEventListener("click", async ()=>{
+    document.getElementById("btnGoogle").addEventListener("click", async () => {
       authMsg.textContent = "";
       const provider = new GoogleAuthProvider();
-      try{
-        await signInWithPopup(auth, provider);
-      } catch (e){
+      try{ await signInWithPopup(auth, provider); }
+      catch(e){
         try{ await signInWithRedirect(auth, provider); }
         catch(e2){ authError(e2); }
       }
     });
 
-    btnLogout.addEventListener("click", async ()=>{
+    btnLogout.addEventListener("click", async () => {
       if(!confirm("Sair e bloquear este navegador?")) return;
       unlocked = false;
       if(unsub){ unsub(); unsub=null; }
@@ -545,54 +588,44 @@
 
     function startSync(){
       if(!userUid) return;
-
       if(unsub){ unsub(); unsub=null; }
       if(unsubGanhos){ unsubGanhos(); unsubGanhos=null; }
 
       setStatus("Sincronização: preparando...");
 
       const q1 = query(expensesCol(), orderBy("data","desc"));
-      unsub = onSnapshot(q1, (snap)=>{
-        gastos = snap.docs.map(d=>({id:d.id, ...d.data()}));
-        if(unlocked) {
+      unsub = onSnapshot(q1, snap => {
+        gastos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if(unlocked){
           setStatus("Sincronização: ativa");
           refreshSelects();
-          renderLista();
-          renderRelatorio();
-          renderGanhos();
+          renderLista(); renderRelatorio(); renderGanhos();
         }
-      }, (err)=>{
-        console.error(err);
-        setStatus("Sincronização: erro");
-      });
+      }, err => { console.error(err); setStatus("Sincronização: erro"); });
 
       const q2 = query(incomeCol(), orderBy("data","desc"));
-      unsubGanhos = onSnapshot(q2, (snap)=>{
-        ganhos = snap.docs.map(d=>({id:d.id, ...d.data()}));
-        if(unlocked) {
+      unsubGanhos = onSnapshot(q2, snap => {
+        ganhos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if(unlocked){
           setStatus("Sincronização: ativa");
           refreshSelects();
-          renderRelatorio();
-          renderGanhos();
+          renderRelatorio(); renderGanhos();
         }
-      }, (err)=>{
-        console.error(err);
-        setStatus("Sincronização: erro");
-      });
+      }, err => { console.error(err); setStatus("Sincronização: erro"); });
     }
 
     // CRUD - GASTOS
-    document.getElementById("btnSalvar").addEventListener("click", async ()=>{
+    document.getElementById("btnSalvar").addEventListener("click", async () => {
       if(!userUid){ alert("Faça login para salvar."); return; }
       if(!unlocked){ alert("Desbloqueie com PIN."); return; }
 
       const data = document.getElementById("data").value;
       const categoria = document.getElementById("categoria").value;
-      const descricao = (document.getElementById("descricao").value||"").trim();
-      const forma = (document.getElementById("forma").value||"").trim();
+      const descricao = document.getElementById("descricao").value.trim();
+      const forma = document.getElementById("forma").value.trim();
       const valor = parseBRL(document.getElementById("valor").value);
 
-      if(!categoria || valor<=0){ alert("Categoria e valor são obrigatórios."); return; }
+      if(!categoria || valor <= 0){ alert("Categoria e valor são obrigatórios."); return; }
 
       await addDoc(expensesCol(), { data, categoria, descricao, forma, valor, anoMes: anoMes(data) });
 
@@ -605,23 +638,20 @@
       if(!confirm("Excluir este gasto?")) return;
       await deleteDoc(doc(db, `users/${userUid}/expenses/${id}`));
     }
-    window.__del = del;
+    window.del = del;
 
     // ADD GANHO
-    window.__addGanho = async function(){
+    window.addGanho = async function(){
       try{
         if(!userUid){ alert("Faça login para salvar."); return; }
         if(!unlocked){ alert("Desbloqueie com PIN."); return; }
 
         const data = document.getElementById("dataGanho").value;
         const tipo = document.getElementById("tipoGanho").value;
-        const descricao = (document.getElementById("descGanho").value||"").trim();
+        const descricao = document.getElementById("descGanho").value.trim();
         const valor = parseBRL(document.getElementById("valorGanho").value);
 
-        if(!tipo || valor<=0){
-          alert("Tipo e valor são obrigatórios (valor maior que 0).");
-          return;
-        }
+        if(!tipo || valor <= 0){ alert("Tipo e valor são obrigatórios (valor maior que 0)."); return; }
 
         await addDoc(incomeCol(), { data, tipo, descricao, valor, anoMes: anoMes(data) });
 
@@ -632,20 +662,19 @@
         document.getElementById("descGanho").value = "";
         document.getElementById("valorGanho").value = "";
         document.getElementById("tipoGanho").value = "";
-      } catch(e){
+      }catch(e){
         console.error(e);
         alert("Erro ao salvar ganho. Abra o console (F12) para ver detalhes.");
       }
-    }
+    };
 
-    // Delete ganho
     async function delGanho(id){
       if(!confirm("Excluir este ganho?")) return;
       await deleteDoc(doc(db, `users/${userUid}/income/${id}`));
     }
-    window.__delGanho = delGanho;
+    window.delGanho = delGanho;
 
-    // Selects + filtros
+    // Selects/filtros
     const filtroMes = document.getElementById("filtroMes");
     const filtroCat = document.getElementById("filtroCat");
     const relMes = document.getElementById("relatorioMes");
@@ -657,19 +686,25 @@
     ganhosMes.addEventListener("change", renderGanhos);
 
     function refreshSelects(){
-      const mesesGastos = gastos.map(g=>g.anoMes).filter(Boolean);
-      const mesesGanhos = ganhos.map(g=>g.anoMes).filter(Boolean);
+      const mesesGastos = gastos.map(g => g.anoMes).filter(Boolean);
+      const mesesGanhos = ganhos.map(g => g.anoMes).filter(Boolean);
       const meses = [...new Set([...mesesGastos, ...mesesGanhos])].sort().reverse();
 
-      const cats = [...new Set(gastos.map(g=>g.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+      const cats = [...new Set(gastos.map(g => g.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
 
       const keepFM = filtroMes.value;
       const keepFC = filtroCat.value;
       const keepRM = relMes.value;
 
-      filtroMes.innerHTML = `<option value="">Todos os meses</option>` + meses.map(m=>`<option value="${m}">${m}</option>`).join("");
-      relMes.innerHTML = `<option value="">Selecione um mês</option>` + meses.map(m=>`<option value="${m}">${m}</option>`).join("");
-      filtroCat.innerHTML = `<option value="">Todas categorias</option>` + cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+      // agora o texto do option é mesLabel(m)
+      filtroMes.innerHTML = `<option value="">Todos os meses</option>` +
+        meses.map(m => `<option value="${m}">${mesLabel(m)}</option>`).join("");
+
+      relMes.innerHTML = `<option value="">Selecione um mês</option>` +
+        meses.map(m => `<option value="${m}">${mesLabel(m)}</option>`).join("");
+
+      filtroCat.innerHTML = `<option value="">Todas categorias</option>` +
+        cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
 
       filtroMes.value = meses.includes(keepFM) ? keepFM : "";
       filtroCat.value = cats.includes(keepFC) ? keepFC : "";
@@ -678,14 +713,13 @@
       const mesesSomenteGanhos = [...new Set(mesesGanhos)].sort().reverse();
       const keepGM = ganhosMes.value;
 
-      ganhosMes.innerHTML =
-        `<option value="">Todos os meses</option>` +
-        mesesSomenteGanhos.map(m=>`<option value="${m}">${m}</option>`).join("");
+      ganhosMes.innerHTML = `<option value="">Todos os meses</option>` +
+        mesesSomenteGanhos.map(m => `<option value="${m}">${mesLabel(m)}</option>`).join("");
 
       ganhosMes.value = mesesSomenteGanhos.includes(keepGM) ? keepGM : (mesesSomenteGanhos[0] || "");
     }
 
-    // Lista render (gastos)
+    // Lista render gastos
     function renderLista(){
       const el = document.getElementById("listaGastos");
       const empty = document.getElementById("emptyLista");
@@ -693,463 +727,4 @@
       const totalEl = document.getElementById("totalLista");
 
       const m = filtroMes.value;
-      const c = filtroCat.value;
-
-      const vis = gastos.filter(g => (!m || g.anoMes===m) && (!c || g.categoria===c))
-                        .sort((a,b)=>String(b.data).localeCompare(String(a.data)));
-
-      if(!vis.length){
-        el.innerHTML = "";
-        empty.style.display = "block";
-        sumBox.style.display = "none";
-        return;
-      }
-
-      empty.style.display = "none";
-      sumBox.style.display = "block";
-      totalEl.textContent = moeda(soma(vis));
-
-      el.innerHTML = vis.map(g=>`
-        <div class="item">
-          <div class="it-left">
-            <div class="it-title">${esc(g.descricao || g.categoria || "")}</div>
-            <div class="it-sub">${dataBR(g.data)} • ${esc(g.categoria||"")} ${g.forma?("• "+esc(g.forma)):""}</div>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <div class="it-val">${moeda(g.valor)}</div>
-            <button class="danger" style="width:auto;padding:8px 10px;margin:0" onclick="__del('${g.id}')">🗑️</button>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    // Lista render (ganhos)
-    function renderGanhos(){
-      const box = document.getElementById("listaGanhos");
-      const empty = document.getElementById("emptyGanhos");
-      const sumBox = document.getElementById("sumGanhosLista");
-      const totalEl = document.getElementById("totalGanhosLista");
-      if(!box || !empty) return;
-
-      const mes = ganhosMes.value || "";
-
-      const vis = ganhos
-        .filter(g => (!mes || g.anoMes === mes))
-        .slice()
-        .sort((a,b)=>String(b.data).localeCompare(String(a.data)));
-
-      if(!vis.length){
-        box.innerHTML = "";
-        empty.style.display = "block";
-        if(sumBox) sumBox.style.display = "none";
-        return;
-      }
-
-      empty.style.display = "none";
-
-      if(sumBox && totalEl){
-        sumBox.style.display = "block";
-        totalEl.textContent = moeda(soma(vis));
-      }
-
-      box.innerHTML = vis.map(g=>`
-        <div class="item">
-          <div class="it-left">
-            <div class="it-title">${esc(g.descricao || g.tipo || "")}</div>
-            <div class="it-sub">${dataBR(g.data)} • ${esc(g.tipo||"")}</div>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <div class="it-val">${moeda(g.valor)}</div>
-            <button class="danger" style="width:auto;padding:8px 10px;margin:0" onclick="__delGanho('${g.id}')">🗑️</button>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    // Relatório render
-    function renderRelatorio(){
-      const mes = relMes.value;
-      const sumRel = document.getElementById("sumRel");
-      const totalRel = document.getElementById("totalRel");
-      const detalhe = document.getElementById("detalheCategorias");
-      const empty = document.getElementById("emptyRel");
-      const info = document.getElementById("infoRel");
-      const exportBtns = document.getElementById("exportBtns");
-
-      const sumGanhos = document.getElementById("sumGanhos");
-      const totalGanhosEl = document.getElementById("totalGanhos");
-      const sumSaldo = document.getElementById("sumSaldo");
-      const saldoEl = document.getElementById("saldoMes");
-
-      if(!mes){
-        sumRel.style.display = "none";
-        detalhe.style.display = "none";
-        exportBtns.style.display = "none";
-        info.style.display = "none";
-        empty.style.display = "block";
-
-        sumGanhos.style.display = "none";
-        sumSaldo.style.display = "none";
-        return;
-      }
-
-      const arr = gastos.filter(g=>g.anoMes===mes);
-      const total = soma(arr);
-      totalRel.textContent = moeda(total);
-      sumRel.style.display = "block";
-      empty.style.display = "none";
-
-      const arrGanhos = ganhos.filter(g=>g.anoMes===mes);
-      const totalGanhos = soma(arrGanhos);
-      totalGanhosEl.textContent = moeda(totalGanhos);
-      sumGanhos.style.display = "block";
-
-      const saldo = totalGanhos - total;
-      saldoEl.textContent = moeda(saldo);
-      sumSaldo.style.display = "block";
-
-      if(!total && !totalGanhos){
-        detalhe.style.display = "none";
-        exportBtns.style.display = "none";
-        info.style.display = "none";
-        return;
-      }
-
-      exportBtns.style.display = "flex";
-      info.textContent = `Mês: ${mes} • Gastos: ${arr.length} • Ganhos: ${arrGanhos.length}`;
-      info.style.display = "block";
-
-      if(!total){
-        detalhe.style.display = "none";
-        return;
-      }
-
-      const map = {};
-      for(const g of arr){
-        const cat = g.categoria || "Outros";
-        const v = Number(g.valor)||0;
-        if(!map[cat]) map[cat] = {cat,total:0,itens:[],qtd:0,min:v,max:v};
-        map[cat].total += v;
-        map[cat].qtd += 1;
-        map[cat].min = Math.min(map[cat].min, v);
-        map[cat].max = Math.max(map[cat].max, v);
-        map[cat].itens.push({
-          data: g.data || "",
-          desc: (g.descricao && String(g.descricao).trim()) ? String(g.descricao).trim() : "(sem descrição)",
-          forma: g.forma || "",
-          valor: v
-        });
-      }
-
-      const cats = Object.values(map).sort((a,b)=>b.total-a.total);
-      cats.forEach(c=>{
-        c.itens.sort((a,b)=>String(b.data).localeCompare(String(a.data)) || (b.valor-a.valor));
-      });
-
-      detalhe.innerHTML = cats.map(c=>{
-        const pct = total ? (c.total/total*100) : 0;
-        const media = c.qtd ? (c.total/c.qtd) : 0;
-
-        const itens = c.itens.map(it=>`
-          <div class="cat-item">
-            <div class="left">
-              <div class="desc">${esc(it.desc)}</div>
-              <div class="sub">${dataBR(it.data)}${it.forma?(" • "+esc(it.forma)):""}</div>
-            </div>
-            <div class="val">${moeda(it.valor)}</div>
-          </div>
-        `).join("");
-
-        return `
-          <details>
-            <summary>
-              <div>
-                <div class="cat-name">${esc(c.cat)}</div>
-                <div class="cat-meta">Qtd: ${c.qtd} • Média: ${moeda(media)} • Menor: ${moeda(c.min)} • Maior: ${moeda(c.max)}</div>
-              </div>
-              <div>
-                <div class="cat-total">${moeda(c.total)}</div>
-                <div class="cat-pct">${pct.toFixed(1)}%</div>
-              </div>
-            </summary>
-            <div class="cat-items">${itens}</div>
-          </details>
-        `;
-      }).join("");
-
-      detalhe.style.display = "block";
-    }
-
-    // ===== GERAR PDF DETALHADO (CORRIGIDO) =====
-    document.getElementById("btnPdf").addEventListener("click", async ()=>{
-      const mes = relMes.value;
-      if(!mes){ alert("Selecione um mês."); return; }
-
-      const arrGastos = gastos.filter(g=>g.anoMes===mes).sort((a,b)=>String(a.data).localeCompare(String(b.data)));
-      const arrGanhos = ganhos.filter(g=>g.anoMes===mes).sort((a,b)=>String(a.data).localeCompare(String(b.data)));
-
-      const totalGastos = soma(arrGastos);
-      const totalGanhos = soma(arrGanhos);
-      const saldo = totalGanhos - totalGastos;
-
-      // Mapa de categorias
-      const map = {};
-      for(const g of arrGastos){
-        const cat = g.categoria || "Outros";
-        const v = Number(g.valor)||0;
-        if(!map[cat]) map[cat] = {cat,total:0,itens:[],qtd:0,min:v,max:v};
-        map[cat].total += v;
-        map[cat].qtd += 1;
-        map[cat].min = Math.min(map[cat].min, v);
-        map[cat].max = Math.max(map[cat].max, v);
-        map[cat].itens.push({
-          data: g.data || "",
-          desc: (g.descricao && String(g.descricao).trim()) ? String(g.descricao).trim() : "(sem descrição)",
-          forma: g.forma || "",
-          valor: v
-        });
-      }
-
-      const cats = Object.values(map).sort((a,b)=>b.total-a.total);
-      cats.forEach(c=>{
-        c.itens.sort((a,b)=>String(b.data).localeCompare(String(a.data)));
-      });
-
-      // HTML do relatório
-      let html = `
-        <style>
-          * { margin: 0; padding: 0; }
-          body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; }
-          .pdf-page { padding: 20px; background: white; }
-          h1 { text-align: center; color: #1a1a1a; border-bottom: 3px solid #007AFF; padding-bottom: 10px; margin-bottom: 20px; font-size: 28px; }
-          h2 { color: #007AFF; border-left: 4px solid #007AFF; padding-left: 10px; margin-top: 25px; margin-bottom: 15px; font-size: 18px; }
-          .header-info { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-around; text-align: center; }
-          .info-box { flex: 1; }
-          .info-label { font-size: 11px; color: #666; text-transform: uppercase; font-weight: bold; }
-          .info-value { font-size: 18px; font-weight: bold; color: #007AFF; margin-top: 5px; }
-          .info-value.danger { color: #FF3B30; }
-          .info-value.success { color: #34C759; }
-          table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
-          th { background: #007AFF; color: white; padding: 10px; text-align: left; font-weight: bold; }
-          td { padding: 8px 10px; border-bottom: 1px solid #ddd; }
-          tr:nth-child(even) { background: #f9f9f9; }
-          .total-row { background: #e3f2fd; font-weight: bold; }
-          .category-section { margin-top: 20px; break-inside: avoid; }
-          .category-header { background: #f0f0f0; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; font-size: 13px; }
-          .cat-name { font-weight: bold; color: #1a1a1a; }
-          .cat-stats { font-size: 11px; color: #666; }
-          .cat-total { font-weight: bold; color: #007AFF; }
-          .cat-pct { font-size: 11px; color: #999; }
-          .item-row { padding: 8px 15px; background: white; border-left: 3px solid #ddd; margin-bottom: 5px; display: flex; justify-content: space-between; font-size: 12px; }
-          .item-desc { flex: 1; }
-          .item-date { font-size: 11px; color: #999; margin-top: 2px; }
-          .item-val { font-weight: bold; color: #333; white-space: nowrap; }
-          .summary-grid { display: flex; gap: 15px; margin: 25px 0; }
-          .summary-card { flex: 1; background: #f5f5f5; padding: 15px; border-radius: 8px; text-align: center; }
-          .summary-title { font-size: 11px; color: #666; text-transform: uppercase; font-weight: bold; margin-bottom: 8px; }
-          .summary-value { font-size: 20px; font-weight: bold; color: #007AFF; }
-          .summary-value.danger { color: #FF3B30; }
-          .summary-value.success { color: #34C759; }
-          .footer { margin-top: 30px; padding-top: 15px; border-top: 2px solid #e0e0e0; text-align: center; font-size: 11px; color: #999; }
-          .logo { text-align: center; margin-bottom: 15px; font-size: 20px; font-weight: bold; color: #007AFF; }
-        </style>
-
-        <div class="pdf-page">
-          <div class="logo">💰 Relatório de Gastos</div>
-          <h1>Extrato Financeiro - ${mes}</h1>
-
-          <div class="header-info">
-            <div class="info-box">
-              <div class="info-label">Total de Ganhos</div>
-              <div class="info-value success">${moeda(totalGanhos)}</div>
-            </div>
-            <div class="info-box">
-              <div class="info-label">Total de Gastos</div>
-              <div class="info-value danger">${moeda(totalGastos)}</div>
-            </div>
-            <div class="info-box">
-              <div class="info-label">Saldo</div>
-              <div class="info-value ${saldo >= 0 ? 'success' : 'danger'}">${moeda(saldo)}</div>
-            </div>
-          </div>
-
-          ${arrGanhos.length > 0 ? `
-          <section>
-            <h2>📥 ENTRADAS (Ganhos)</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Tipo</th>
-                  <th>Descrição</th>
-                  <th style="text-align: right;">Valor</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${arrGanhos.map(g=>`
-                  <tr>
-                    <td>${dataBR(g.data)}</td>
-                    <td>${esc(g.tipo)}</td>
-                    <td>${esc(g.descricao || "—")}</td>
-                    <td style="text-align: right; font-weight: bold; color: #34C759;">${moeda(g.valor)}</td>
-                  </tr>
-                `).join("")}
-                <tr class="total-row">
-                  <td colspan="3" style="text-align: right;">TOTAL ENTRADAS:</td>
-                  <td style="text-align: right; color: #34C759;">${moeda(totalGanhos)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
-          ` : ""}
-
-          <section>
-            <h2>📤 SAÍDAS (Gastos)</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Categoria</th>
-                  <th>Descrição</th>
-                  <th>Pagamento</th>
-                  <th style="text-align: right;">Valor</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${arrGastos.map(g=>`
-                  <tr>
-                    <td>${dataBR(g.data)}</td>
-                    <td>${esc(g.categoria)}</td>
-                    <td>${esc(g.descricao || "—")}</td>
-                    <td>${esc(g.forma || "—")}</td>
-                    <td style="text-align: right; font-weight: bold; color: #FF3B30;">${moeda(g.valor)}</td>
-                  </tr>
-                `).join("")}
-                <tr class="total-row">
-                  <td colspan="4" style="text-align: right;">TOTAL SAÍDAS:</td>
-                  <td style="text-align: right; color: #FF3B30;">${moeda(totalGastos)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
-
-          <section>
-            <h2>📊 ANÁLISE POR CATEGORIA</h2>
-            ${cats.map(c=>{
-              const pct = totalGastos ? (c.total/totalGastos*100) : 0;
-              const media = c.qtd ? (c.total/c.qtd) : 0;
-              return `
-                <div class="category-section">
-                  <div class="category-header">
-                    <div>
-                      <div class="cat-name">${esc(c.cat)}</div>
-                      <div class="cat-stats">Transações: ${c.qtd} | Média: ${moeda(media)} | Min: ${moeda(c.min)} | Max: ${moeda(c.max)}</div>
-                    </div>
-                    <div>
-                      <div class="cat-total">${moeda(c.total)}</div>
-                      <div class="cat-pct">${pct.toFixed(1)}% do total</div>
-                    </div>
-                  </div>
-                  ${c.itens.map(it=>`
-                    <div class="item-row">
-                      <div class="item-desc">
-                        <div>${esc(it.desc)}</div>
-                        <div class="item-date">${dataBR(it.data)}${it.forma ? ` • ${esc(it.forma)}` : ""}</div>
-                      </div>
-                      <div class="item-val">${moeda(it.valor)}</div>
-                    </div>
-                  `).join("")}
-                </div>
-              `;
-            }).join("")}
-          </section>
-
-          <div class="summary-grid">
-            <div class="summary-card">
-              <div class="summary-title">💵 Total de Ganhos</div>
-              <div class="summary-value success">${moeda(totalGanhos)}</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-title">💸 Total de Gastos</div>
-              <div class="summary-value danger">${moeda(totalGastos)}</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-title">📈 Saldo</div>
-              <div class="summary-value ${saldo >= 0 ? 'success' : 'danger'}">${moeda(saldo)}</div>
-            </div>
-          </div>
-
-          <div class="footer">
-            <p>Relatório gerado em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR")}</p>
-            <p>Sistema de Controle de Gastos Pessoais</p>
-          </div>
-        </div>
-      `;
-
-      // Criar elemento temporário
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = html;
-      document.body.appendChild(tempDiv);
-
-      // Aguardar um pouco para garantir renderização
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Gerar PDF
-      const opt = {
-        margin: [5, 5, 5, 5],
-        filename: `Relatorio_${mes}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-
-      try {
-        await html2pdf().set(opt).from(tempDiv).save();
-      } catch (e) {
-        console.error("Erro ao gerar PDF:", e);
-        alert("Erro ao gerar PDF. Abra o console (F12) para detalhes.");
-      }
-
-      // Remover elemento temporário
-      document.body.removeChild(tempDiv);
-    });
-
-    // Auth
-    async function init(){
-      show(loginOverlay, true);
-      setStatus("Sincronização: desconectada");
-
-      try { await getRedirectResult(auth); } catch (_) {}
-
-      if(sessionStorage.getItem(PENDING_PIN_RESET)==="1"){
-        sessionStorage.removeItem(PENDING_PIN_RESET);
-        localStorage.removeItem(PIN_HASH_KEY);
-        unlocked = false;
-        show(pinOverlay,true);
-        pinMode("set");
-      }
-
-      onAuthStateChanged(auth, async (user)=>{
-        if(!user){
-          userUid = null;
-          unlocked = false;
-          if(unsub){ unsub(); unsub=null; }
-          if(unsubGanhos){ unsubGanhos(); unsubGanhos=null; }
-          btnLogout.style.display = "none";
-          btnChangePin.style.display = "none";
-          setStatus("Sincronização: desconectada");
-          show(loginOverlay,true);
-          return;
-        }
-
-        userUid = user.uid;
-        show(loginOverlay,false);
-        startSync();
-        await requirePin();
-      });
-    }
-
-    init();
-  </script>
-</body>
-</html>
+     
